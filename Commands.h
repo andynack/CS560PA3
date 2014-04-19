@@ -10,6 +10,7 @@
 #define	COMMANDS_H
 
 #include <string>
+#include <fstream>
 
 class Commands {
 public:
@@ -17,10 +18,10 @@ public:
     virtual ~Commands(); //de-constructor
     void mkfs();
     void open(std::string filename, std::string flag);
-    void read(std::string fd, int size);
-    void write(std::string fd, std::string str);
-    void seek(std::string fd, int offset);
-    void close(std::string fd);
+    void read(int fd, int size);
+    void write(int fd, std::string str);
+    void seek(int fd, int offset);
+    void close(int fd);
     void mkdir(std::string dirname);
     void rmdir(std::string dirname);
     void cd(std::string dirname);
@@ -28,14 +29,17 @@ public:
     void unlink(std::string name);
     void stat(std::string name);
     void ls();
-    void cat (std::string filename);
+    void cat(std::string filename);
     void cp(std::string src, std::string dest);
     void tree();
     void import(std::string src, std::string dest);
     void fexport(std::string src, std::string dest);
     
 private:
-
+    int ctrnodeoffset;
+    int filespaceoffset;
+    int OpenForWrite;
+    int OpenForRead;
 };
 
 #endif	/* COMMANDS_H */

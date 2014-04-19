@@ -7,7 +7,7 @@
  */
 
 #include <cstdlib>
-
+#include <stdio.h>
 #include "index.h"
 #include "Commands.h"
 
@@ -17,6 +17,7 @@ int main(int argc, char** argv) {
     
     Commands customfilesys; //test
     customfilesys.mkfs(); //test
+    customfilesys.open("test.txt", "rw");
     
     return 0;
 }

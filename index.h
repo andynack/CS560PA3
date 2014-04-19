@@ -9,7 +9,13 @@
 #ifndef INDEX_H
 #define	INDEX_H
 
-#include <stdio.h>
+#include <string>
+
+struct nametable
+{
+    std::string filename;
+    int id;
+};
 
 struct indexnode
 { 
@@ -18,24 +24,25 @@ struct indexnode
     int size; //file size
     int tdcreate; //time & date of original creation
     int tdmodify; //time & date of last modification
+    int linkcount; //number of names linked to this file
     
     //file block locations (??block size is 1KB, 1024 Bytes??)
-    FILE *fptr; //1st direct pointer
- /*   FILE *b; //2nd direct pointer
-    FILE *c; //3rd direct pointer
-    FILE *d; //4th direct pointer
-    FILE *e; //5th direct pointer
-    FILE *f; //6th direct pointer
-    FILE *g; //7th direct pointer
-    FILE *h; //8th direct pointer
-    FILE *i; //9th direct pointer
-    FILE *j; //10th direct pointer
-    FILE *k; //11th direct pointer
-    FILE *l; //12th direct pointer
-    FILE *m; //indirect pointer
-    FILE *n; //double indirect pointer
-    FILE *o; //triple indirect pointer
-*/    
+    FILE *fptr_a; //1st direct pointer
+    FILE *fptr_b; //2nd direct pointer
+    FILE *fptr_c; //3rd direct pointer
+    FILE *fptr_d; //4th direct pointer
+    FILE *fptr_e; //5th direct pointer
+    FILE *fptr_f; //6th direct pointer
+    FILE *fptr_g; //7th direct pointer
+    FILE *fptr_h; //8th direct pointer
+    FILE *fptr_i; //9th direct pointer
+    FILE *fptr_j; //10th direct pointer
+    FILE *fptr_k; //11th direct pointer
+    FILE *fptr_l; //12th direct pointer
+    FILE *fptr_m; //indirect pointer
+    FILE *fptr_n; //double indirect pointer
+    FILE *fptr_o; //triple indirect pointer
+    
 };
 
 #endif	/* INDEX_H */
