@@ -13,35 +13,42 @@
 
 struct nametable
 {
-    std::string filename;
-    int id;
+    std::string fname;
+    int ntid;
+};
+
+struct directory
+{
+    std::string dfname;
+    int dfid;
 };
 
 struct indexnode
 { 
     //file attributes (all files are type .txt)
     int id; //inode identifier
+    int valid;
     int size; //file size
     int tdcreate; //time & date of original creation
     int tdmodify; //time & date of last modification
     int linkcount; //number of names linked to this file
     
     //file block locations (??block size is 1KB, 1024 Bytes??)
-    FILE *fptr_a; //1st direct pointer
-    FILE *fptr_b; //2nd direct pointer
-    FILE *fptr_c; //3rd direct pointer
-    FILE *fptr_d; //4th direct pointer
-    FILE *fptr_e; //5th direct pointer
-    FILE *fptr_f; //6th direct pointer
-    FILE *fptr_g; //7th direct pointer
-    FILE *fptr_h; //8th direct pointer
-    FILE *fptr_i; //9th direct pointer
-    FILE *fptr_j; //10th direct pointer
-    FILE *fptr_k; //11th direct pointer
-    FILE *fptr_l; //12th direct pointer
-    FILE *fptr_m; //indirect pointer
-    FILE *fptr_n; //double indirect pointer
-    FILE *fptr_o; //triple indirect pointer
+    int fptr_a; //1st direct pointer
+ /*   int fptr_b; //2nd direct pointer
+    int fptr_c; //3rd direct pointer
+    int fptr_d; //4th direct pointer
+    int fptr_e; //5th direct pointer
+    int fptr_f; //6th direct pointer
+    int fptr_g; //7th direct pointer
+    int fptr_h; //8th direct pointer
+    int fptr_i; //9th direct pointer
+    int fptr_j; //10th direct pointer
+    int fptr_k; //11th direct pointer
+    int fptr_l; //12th direct pointer
+    int fptr_m; //indirect pointer
+    int fptr_n; //double indirect pointer
+    int fptr_o; //triple indirect pointer*/
     
 };
 

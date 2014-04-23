@@ -11,13 +11,14 @@
 
 #include <string>
 #include <fstream>
+#include "index.h"
 
 class Commands {
 public:
     Commands(); //constructor
     virtual ~Commands(); //de-constructor
     void mkfs();
-    void open(std::string filename, std::string flag);
+    void open(std::string filename, std::string fg);
     void read(int fd, int size);
     void write(int fd, std::string str);
     void seek(int fd, int offset);
@@ -36,10 +37,14 @@ public:
     void fexport(std::string src, std::string dest);
     
 private:
-    int ctrnodeoffset;
-    int filespaceoffset;
-    int OpenForWrite;
-    int OpenForRead;
+    int INodePTR;
+    int FileSpacePTR;
+    int OpenForWritePTR;
+    int OpenForReadPTR;
+    int CurrentDirPTR;
+    int CurrentFileFD;
+    std::string Flag;
+    std::string CurrentDir;
 };
 
 #endif	/* COMMANDS_H */
