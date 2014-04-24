@@ -4,30 +4,10 @@
 #include <string>
 #include <vector>
 #include <cstdlib>
-<<<<<<< HEAD
-#include <stdio.h>
-#include <cstring>
-#include "index.h"
-#include "Commands.h"
-=======
->>>>>>> 4870414fd5b9b67dbb6448e5657183a62dbae28c
+#include "Commands.cpp"
 
-#include "Commands.h"
-//#include "Commands.cpp"
 using namespace std;
 
-<<<<<<< HEAD
-int main(int argc, char** argv) {
-    
-    Commands customfilesys; //test
-    customfilesys.mkfs(); //test
-    char file[20];
-    char flg[5];
-    strcpy(file, "test.txt");
-    strcpy(flg, "rw");
-    customfilesys.open(file, flg);
-    
-=======
 void callCommand(Commands, string);
 
 int main(int argc, char** argv)
@@ -56,7 +36,7 @@ int main(int argc, char** argv)
 			callCommand(coms, line);
 		}
 	}
->>>>>>> 4870414fd5b9b67dbb6448e5657183a62dbae28c
+
     return 0;
 }
 
