@@ -8,6 +8,7 @@
 
 #include <cstdlib>
 #include <stdio.h>
+#include <cstring>
 #include "index.h"
 #include "Commands.h"
 
@@ -17,7 +18,11 @@ int main(int argc, char** argv) {
     
     Commands customfilesys; //test
     customfilesys.mkfs(); //test
-    customfilesys.open("test.txt", "rw");
+    char file[20];
+    char flg[5];
+    strcpy(file, "test.txt");
+    strcpy(flg, "rw");
+    customfilesys.open(file, flg);
     
     return 0;
 }

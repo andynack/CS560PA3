@@ -18,23 +18,23 @@ public:
     Commands(); //constructor
     virtual ~Commands(); //de-constructor
     void mkfs();
-    void open(std::string filename, std::string fg);
+    void open(char filename[20], char fg[5]);
     void read(int fd, int size);
-    void write(int fd, std::string str);
+    void write(int fd, char str[100]);
     void seek(int fd, int offset);
     void close(int fd);
-    void mkdir(std::string dirname);
-    void rmdir(std::string dirname);
-    void cd(std::string dirname);
-    void link(std::string src, std::string dest);
-    void unlink(std::string name);
-    void stat(std::string name);
+    void mkdir(char dirname[20]);
+    void rmdir(char dirname[20]);
+    void cd(char dirname[20]);
+    void link(char src[20], char dest[20]);
+    void unlink(char name[20]);
+    void stat(char name[20]);
     void ls();
-    void cat(std::string filename);
-    void cp(std::string src, std::string dest);
+    void cat(char filename[20]);
+    void cp(char src[20], char dest[20]);
     void tree();
-    void import(std::string src, std::string dest);
-    void fexport(std::string src, std::string dest);
+    void import(char src[20], char dest[20]);
+    void fexport(char src[20], char dest[20]);
     
 private:
     int INodePTR;
@@ -43,8 +43,8 @@ private:
     int OpenForReadPTR;
     int CurrentDirPTR;
     int CurrentFileFD;
-    std::string Flag;
-    std::string CurrentDir;
+    char Flag[5];
+    char CurrentDir[20];
 };
 
 #endif	/* COMMANDS_H */

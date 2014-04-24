@@ -13,13 +13,13 @@
 
 struct nametable
 {
-    std::string fname;
+    char fname[20];
     int ntid;
 };
 
 struct directory
 {
-    std::string dfname;
+    char dfname[20];
     int dfid;
 };
 
@@ -33,7 +33,7 @@ struct indexnode
     int tdmodify; //time & date of last modification
     int linkcount; //number of names linked to this file
     
-    //file block locations (??block size is 1KB, 1024 Bytes??)
+    //file block locations (block size is 10KB)
     int fptr_a; //1st direct pointer
  /*   int fptr_b; //2nd direct pointer
     int fptr_c; //3rd direct pointer
