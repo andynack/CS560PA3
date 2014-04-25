@@ -9,17 +9,18 @@
 #ifndef INDEX_H
 #define	INDEX_H
 
-#include <string>
+//#include <string>
 
-struct nametable
+/*struct nametable
 {
     char fname[20];
     int ntid;
-};
+};*/
 
 struct directory
 {
     char dfname[20];
+    int dir;
     int dfid;
 };
 

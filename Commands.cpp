@@ -6,11 +6,11 @@
  * Created on April 12, 2014, 2:50 PM
  */
 
-#include "Commands.h"
-
 #include <iostream>
 #include <cstring>
-
+#include <fstream>
+#include "index.h"
+#include "Commands.h"
 
 Commands::Commands() {
  /*   std::ofstream ofs("filesystem.dat", std::ios::binary | std::ios::out);
@@ -30,13 +30,15 @@ void Commands::mkfs() {
 //    nametable ctrlnames;
     indexnode ctrlnodes;
     directory templatedir;
+    int DiskSize;
         
     //create raw disk
     std::ofstream ofs("filesystem.dat", std::ios::binary | std::ios::out);
     ofs.seekp(100000000-1);
     ofs.write("", 1); 
     std::cout<< "Disk Created And Ready For Use\n";
-    std::cout<< "Disk Size: "<< ofs.tellp()<< "\n\n";
+    DiskSize = ofs.tellp();
+    std::cout<< "Disk Size: "<< DiskSize << "\n\n";
         
     ofs.seekp(0);
  /*   std::cout<< "Start of Name Table: "<< ofs.tellp()<< "\n";
@@ -53,7 +55,7 @@ void Commands::mkfs() {
     ctrlnodes.size = sizeof(templatedir);
     ctrlnodes.fptr_a = FileSpacePTR; 
     ofs.write((char*)&ctrlnodes,sizeof(ctrlnodes));
-    
+/*    
     ofs.seekp(ctrlnodes.fptr_a);
     std::cout<< "Start of Data Block: "<< ofs.tellp()<< "\n";
     strcpy(templatedir.dfname, "");
@@ -61,10 +63,10 @@ void Commands::mkfs() {
     ofs.write((char*)&templatedir,sizeof(templatedir));
     
     std::cout<< "Root Directory Initialized\n";
-    
+*/    
     ofs.seekp(0, ofs.end);
     std::cout<< "Disk Size: "<< ofs.tellp()<< "\n\n";
-    
+    std::cout<< "Available Disk Space for Data: "<< (DiskSize - FileSpacePTR) << "\n\n";
     std::cout<< "The Current Directory is: "<< CurrentDir << "\n";
 /*      
     // create 5000 entry name table
@@ -108,8 +110,11 @@ void Commands::mkfs() {
     std::cout<< "\nControl Block Initialized\n";*/
 }
 
-void Commands::open(char filename[20], char fg[5]){
+void Commands::open(std::string filename, std::string fg){
+    char file_name[20];
+    strcpy(file_name, filename.c_str());
     bool success = false;
+    int i = 1;
     int datablock = FileSpacePTR;
  //   nametable ctrlnames;
     directory templatdr;
@@ -118,14 +123,19 @@ void Commands::open(char filename[20], char fg[5]){
     fp.seekg(CurrentDirPTR);
     while(fp.read((char*)&templatdr, sizeof(templatdr)) && fp.tellg() < (CurrentDirPTR + 10000))
     {
-        if(strcmp(templatdr.dfname, filename)== 0){
+        if(strcmp(templatdr.dfname, file_name)== 0){
             CurrentFileFD = templatdr.dfid;
-            success = true; 
+            success = true;
+            if(templatdr.dir == 0){
+                std::cout<< "This is a Directory\n";
+            }else {
+                std::cout<< "File Existed\n";
+            }
         }
     }
     if (!success){
         //find unused data block
-        fp.seekg(INodePTR);
+        fp.seekg(0);
         while(fp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && fp.tellg() < FileSpacePTR)
         {
             if(ctrlnodes.valid == 1){               
@@ -168,21 +178,22 @@ void Commands::open(char filename[20], char fg[5]){
                 } */
             }
         }
+        std::cout<< "The next available file block is: "<< datablock << "\n";
         
         //find unused inode and initialize
-        fp.seekg(INodePTR);
+        fp.seekg(0);
         while(fp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && fp.tellg() < FileSpacePTR)
         {
-            int i = 1;
+          //  int i = 1;
             if(ctrlnodes.valid == 0){               
                 indexnode tmp = ctrlnodes;                
-                CurrentFileFD = tmp.id;
         //        long pos=-1*sizeof(tmp);
                 fp.seekp(-sizeof(tmp),std::ios::cur);
                 tmp.fptr_a = datablock;
                 tmp.valid = 1;
                 tmp.id = i;
                 tmp.linkcount = 1;                
+                CurrentFileFD = tmp.id;
                 fp.write((char*)&tmp, sizeof(tmp));
                 success = true; 
                 break;
@@ -190,13 +201,14 @@ void Commands::open(char filename[20], char fg[5]){
             i++;
         }
         //find blank entry in name table and initialize
-        fp.seekg(0);
-        while(fp.read((char*)&templatdr,sizeof(templatdr)) && fp.tellg() < INodePTR)
+        fp.seekg(CurrentDirPTR);
+        while(fp.read((char*)&templatdr,sizeof(templatdr)) && fp.tellg() < (CurrentDirPTR + 10000))
         {
             if(templatdr.dfname == ""){
                 directory tmp = templatdr;
-                strcpy(tmp.dfname, filename);
+                strcpy(tmp.dfname, file_name);
                 tmp.dfid = CurrentFileFD;
+                tmp.dir = 0;
         //        long pos=-sizeof(tmp);
                 fp.seekp(-sizeof(tmp),std::ios::cur);
                 fp.write((char*)&tmp, sizeof(tmp));
@@ -206,13 +218,13 @@ void Commands::open(char filename[20], char fg[5]){
         }
     }
       
-    strcpy(Flag, fg);
+    strcpy(Flag, fg.c_str());
     if (strcmp(Flag, "w") == 0){
-        std::cout<< "\nFile "<< filename << " open for Writing and fd = " << CurrentFileFD << ".\n";
+        std::cout<< "\nFile "<< file_name << " open for Writing and fd = " << CurrentFileFD << ".\n";
     }else if (strcmp(Flag, "r") == 0){
-        std::cout<< "\nFile "<< filename << " open for Reading and fd = " << CurrentFileFD << ".\n";
+        std::cout<< "\nFile "<< file_name << " open for Reading and fd = " << CurrentFileFD << ".\n";
     }else if (strcmp(Flag, "rw") == 0){
-        std::cout<< "\nFile "<< filename << " open for Reading and Writing and fd = " << CurrentFileFD << ".\n";
+        std::cout<< "\nFile "<< file_name << " open for Reading and Writing and fd = " << CurrentFileFD << ".\n";
     }
     
 }
@@ -222,7 +234,7 @@ void Commands::read(int fd, int size){
     //add code
 }
 
-void Commands::write(int fd, char str[100]){
+void Commands::write(int fd, std::string str){
    
     //add code
 }
@@ -237,27 +249,27 @@ void Commands::close(int fd){
     //add code
 }
 
-void Commands::mkdir(char dirname[20]){
+void Commands::mkdir(std::string dirname){
     //add code
 }
 
-void Commands::rmdir(char dirname[20]){
+void Commands::rmdir(std::string dirname){
     //add code
 }
 
-void Commands::cd(char dirname[20]){
+void Commands::cd(std::string dirname){
     //add code
 }
 
-void Commands::link(char src[20], char dest[20]){
+void Commands::link(std::string src, std::string dest){
     //add code
 }
 
-void Commands::unlink(char name[20]){
+void Commands::unlink(std::string name){
     //add code
 }
 
-void Commands::stat(char name[20]){
+void Commands::stat(std::string name){
     //add code
 }
 
@@ -265,11 +277,11 @@ void Commands::ls(){
     //add code
 }
 
-void Commands::cat(char filename[20]){
+void Commands::cat(std::string filename){
     //add code
 }
 
-void Commands::cp(char src[20], char dest[20]){
+void Commands::cp(std::string src, std::string dest){
   
 }
 
@@ -277,10 +289,10 @@ void Commands::tree(){
     //add code
 }
 
-void Commands::import(char src[20], char dest[20]){
+void Commands::import(std::string src, std::string dest){
     //add code
 }
 
-void Commands::fexport(char src[20], char dest[20]){
+void Commands::fexport(std::string src, std::string dest){
     //add code
 }

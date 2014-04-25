@@ -10,31 +10,31 @@
 #define	COMMANDS_H
 
 #include <string>
-#include <fstream>
-#include "index.h"
+//#include <fstream>
+//#include "index.h"
 
 class Commands {
 public:
     Commands(); //constructor
     virtual ~Commands(); //de-constructor
     void mkfs();
-    void open(char filename[20], char fg[5]);
+    void open(std::string filename, std::string fg);
     void read(int fd, int size);
-    void write(int fd, char str[100]);
+    void write(int fd, std::string str);
     void seek(int fd, int offset);
     void close(int fd);
-    void mkdir(char dirname[20]);
-    void rmdir(char dirname[20]);
-    void cd(char dirname[20]);
-    void link(char src[20], char dest[20]);
-    void unlink(char name[20]);
-    void stat(char name[20]);
+    void mkdir(std::string dirname);
+    void rmdir(std::string dirname);
+    void cd(std::string dirname);
+    void link(std::string src, std::string dest);
+    void unlink(std::string name);
+    void stat(std::string name);
     void ls();
-    void cat(char filename[20]);
-    void cp(char src[20], char dest[20]);
+    void cat(std::string filename);
+    void cp(std::string src, std::string dest);
     void tree();
-    void import(char src[20], char dest[20]);
-    void fexport(char src[20], char dest[20]);
+    void import(std::string src, std::string dest);
+    void fexport(std::string src, std::string dest);
     
 private:
     int INodePTR;
