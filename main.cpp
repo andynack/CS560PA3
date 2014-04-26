@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <cstdlib>
-#include "Commands.cpp"
+#include "Commands.h"
 
 using namespace std;
 

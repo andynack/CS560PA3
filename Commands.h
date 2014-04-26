@@ -10,7 +10,6 @@
 #define	COMMANDS_H
 
 #include <string>
-//#include <fstream>
 //#include "index.h"
 
 class Commands {
@@ -43,6 +42,8 @@ private:
     int OpenForReadPTR;
     int CurrentDirPTR;
     int CurrentFileFD;
+    int DataBlockSize;
+    int DiskSize;
     char Flag[5];
     char CurrentDir[20];
 };

@@ -11,12 +11,6 @@
 
 //#include <string>
 
-/*struct nametable
-{
-    char fname[20];
-    int ntid;
-};*/
-
 struct directory
 {
     char dfname[20];
