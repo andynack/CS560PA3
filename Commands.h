@@ -10,7 +10,6 @@
 #define	COMMANDS_H
 
 #include <string>
-//#include "index.h"
 
 class Commands {
 public:
@@ -34,18 +33,9 @@ public:
     void tree();
     void import(std::string src, std::string dest);
     void fexport(std::string src, std::string dest);
-    
+
 private:
-    int INodePTR;
-    int FileSpacePTR;
-    int OpenForWritePTR;
-    int OpenForReadPTR;
-    int CurrentDirPTR;
-    int CurrentFileFD;
-    int DataBlockSize;
-    int DiskSize;
-    char Flag[5];
-    char CurrentDir[20];
+    int GetNextDataBlock();
 };
 
 #endif	/* COMMANDS_H */
