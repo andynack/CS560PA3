@@ -36,6 +36,7 @@ public:
 
 private:
     int GetNextDataBlock();
+    int GetCurDirInfo();
 };
 
 #endif	/* COMMANDS_H */

@@ -49,7 +49,7 @@ void Commands::mkfs() {
         ctrlnodes.id = 1;
         ctrlnodes.valid = 1;
         ctrlnodes.linkcount = 1;
-        ctrlnodes.size = sizeof(templatedir);
+        ctrlnodes.size = 0;
         ctrlnodes.fptr_a = FileSpacePTR;
         ctrlnodes.fptr_b = 0;
         ctrlnodes.fptr_c = 0;
@@ -94,63 +94,8 @@ void Commands::open(std::string filename, std::string fg){
         if (fp){
             
             //get info of current directory
-            fp.seekg(0);
-            bool success = false;
-            while(fp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (fp.tellg() < FileSpacePTR))
-            {
-                if(ctrlnodes.id == CurrentDirID){               
-                    CurrentDirSize = ctrlnodes.size;
-                    CurrentDirPTR = ctrlnodes.fptr_a;
-                    if(CurrentDirSize > DataBlockSize){
-                        CurrentDirPTR_B = ctrlnodes.fptr_b;
-                    }else{
-                        CurrentDirPTR_B = 0;
-                    }
-                    if(CurrentDirSize > (2 * DataBlockSize)){
-                        CurrentDirPTR_C = ctrlnodes.fptr_c;
-                    }else{
-                        CurrentDirPTR_C = 0;
-                    }
-                    if(CurrentDirSize > (3 * DataBlockSize)){
-                        CurrentDirPTR_D = ctrlnodes.fptr_d;
-                    }else{
-                        CurrentDirPTR_D = 0;
-                    }
-                    if(CurrentDirSize > (4 * DataBlockSize)){
-                        CurrentDirPTR_E = ctrlnodes.fptr_e;
-                    }else{
-                        CurrentDirPTR_E = 0;
-                    }
-                    if(CurrentDirSize > (5 * DataBlockSize)){
-                        CurrentDirPTR_F = ctrlnodes.fptr_f;
-                    }else{
-                        CurrentDirPTR_F = 0;
-                    }
-                    if(CurrentDirSize > (6 * DataBlockSize)){
-                        CurrentDirPTR_G = ctrlnodes.fptr_g;
-                    }else{
-                        CurrentDirPTR_G = 0;
-                    }
-                    if(CurrentDirSize > (7 * DataBlockSize)){
-                        CurrentDirPTR_H = ctrlnodes.fptr_h;
-                    }else{
-                        CurrentDirPTR_H = 0;
-                    }
-                    if(CurrentDirSize > (8 * DataBlockSize)){
-                        CurrentDirPTR_I = ctrlnodes.fptr_i;
-                    }else{
-                        CurrentDirPTR_I = 0;
-                    }
-                    if(CurrentDirSize > (9 * DataBlockSize)){
-                        CurrentDirPTR_J = ctrlnodes.fptr_j;
-                    }else{
-                        CurrentDirPTR_J = 0;
-                    }
-                    success = true; 
-                    break;
-                }
-            }
-            if (!success){
+            int status = GetCurDirInfo();
+            if (!status){
                 CurrentFileStatus = false;
                 std::cout<< "****Error inode for current directory not found****\n";
                 error = true;
@@ -171,6 +116,7 @@ void Commands::open(std::string filename, std::string fg){
                         std::cout<< "File Existed\n";
                         CurrentFileFD = templatdr.dfid;
                         CurrentFileStatus = true;
+                        CurrentFileOffset = 0;
                     }
                 }
             }
@@ -191,6 +137,7 @@ void Commands::open(std::string filename, std::string fg){
                             std::cout<< "File Existed\n";
                             CurrentFileFD = templatdr.dfid;
                             CurrentFileStatus = true;
+                            CurrentFileOffset = 0;
                         }
                     }
                 }
@@ -212,6 +159,7 @@ void Commands::open(std::string filename, std::string fg){
                             std::cout<< "File Existed\n";
                             CurrentFileFD = templatdr.dfid;
                             CurrentFileStatus = true;
+                            CurrentFileOffset = 0;
                         }
                     }
                 }
@@ -232,6 +180,7 @@ void Commands::open(std::string filename, std::string fg){
                             std::cout<< "File Existed\n";
                             CurrentFileFD = templatdr.dfid;
                             CurrentFileStatus = true;
+                            CurrentFileOffset = 0;
                         }
                     }
                 }
@@ -252,6 +201,7 @@ void Commands::open(std::string filename, std::string fg){
                             std::cout<< "File Existed\n";
                             CurrentFileFD = templatdr.dfid;
                             CurrentFileStatus = true;
+                            CurrentFileOffset = 0;
                         }
                     }
                 }
@@ -272,6 +222,7 @@ void Commands::open(std::string filename, std::string fg){
                             std::cout<< "File Existed\n";
                             CurrentFileFD = templatdr.dfid;
                             CurrentFileStatus = true;
+                            CurrentFileOffset = 0;
                         }
                     }
                 }
@@ -292,6 +243,7 @@ void Commands::open(std::string filename, std::string fg){
                             std::cout<< "File Existed\n";
                             CurrentFileFD = templatdr.dfid;
                             CurrentFileStatus = true;
+                            CurrentFileOffset = 0;
                         }
                     }
                 }
@@ -312,6 +264,7 @@ void Commands::open(std::string filename, std::string fg){
                             std::cout<< "File Existed\n";
                             CurrentFileFD = templatdr.dfid;
                             CurrentFileStatus = true;
+                            CurrentFileOffset = 0;
                         }
                     }
                 }
@@ -332,6 +285,7 @@ void Commands::open(std::string filename, std::string fg){
                             std::cout<< "File Existed\n";
                             CurrentFileFD = templatdr.dfid;
                             CurrentFileStatus = true;
+                            CurrentFileOffset = 0;
                         }
                     }
                 }
@@ -352,6 +306,7 @@ void Commands::open(std::string filename, std::string fg){
                             std::cout<< "File Existed\n";
                             CurrentFileFD = templatdr.dfid;
                             CurrentFileStatus = true;
+                            CurrentFileOffset = 0;
                         }
                     }
                 }
@@ -369,7 +324,7 @@ void Commands::open(std::string filename, std::string fg){
                     
                     //find unused inode and initialize                    
                     fp.seekg(0);
-                    success = false;
+                    bool success = false;
                     int i = 1;
                     while(fp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (fp.tellg() < FileSpacePTR))
                     {
@@ -428,8 +383,8 @@ void Commands::open(std::string filename, std::string fg){
                         if((CurrentDirSize > (9 * DataBlockSize)) && (CurrentDirSize < (10 * DataBlockSize))){
                             fp.seekg(CurrentDirPTR_J);
                         }
-                        success = false;
                         
+                        success = false;
                         int temp = fp.tellg();
                         while(fp.read((char*)&templatdr,sizeof(templatdr)) && (fp.tellg() <= (temp + DataBlockSize)))
                         {
@@ -479,6 +434,7 @@ void Commands::open(std::string filename, std::string fg){
                 }
                 if (!error){
                     CurrentFileStatus = true;
+                    CurrentFileOffset = 0;
                 }
             }
 
@@ -501,8 +457,182 @@ void Commands::open(std::string filename, std::string fg){
 }
 
 void Commands::read(int fd, int size){
-    
-    //add code
+    bool error = false;
+    indexnode ctrlnodes;
+    if (CurrentFileStatus && ((strcmp(Flag, "r") == 0) || (strcmp(Flag, "rw") == 0)) && (fd == CurrentFileFD)){
+        
+        //open filesystem "disk" for reading and writing
+        std::fstream ifp ("filesystem.dat", std::ios::in|std::ios::binary);
+        
+        //ensure "disk" opened correctly
+        if (ifp){
+                        
+            //get info of current file
+            ifp.seekg(0);
+            bool success = false;
+            while(ifp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (ifp.tellg() < FileSpacePTR))
+            {
+                if(ctrlnodes.id == CurrentFileFD){               
+                    CurrentFileFDPTR = ifp.tellg();
+                    CurrentFileFDPTR = CurrentFileFDPTR - sizeof(ctrlnodes);
+                    CurrentFileSize = ctrlnodes.size;
+                    CurrentFilePTR = ctrlnodes.fptr_a;
+                    if(CurrentFileSize > DataBlockSize){
+                        CurrentFilePTR_B = ctrlnodes.fptr_b;
+                    }else{
+                        CurrentFilePTR_B = 0;
+                    }
+                    if(CurrentFileSize > (2 * DataBlockSize)){
+                        CurrentFilePTR_C = ctrlnodes.fptr_c;
+                    }else{
+                        CurrentFilePTR_C = 0;
+                    }
+                    if(CurrentFileSize > (3 * DataBlockSize)){
+                        CurrentFilePTR_D = ctrlnodes.fptr_d;
+                    }else{
+                        CurrentFilePTR_D = 0;
+                    }
+                    if(CurrentFileSize > (4 * DataBlockSize)){
+                        CurrentFilePTR_E = ctrlnodes.fptr_e;
+                    }else{
+                        CurrentFilePTR_E = 0;
+                    }
+                    if(CurrentFileSize > (5 * DataBlockSize)){
+                        CurrentFilePTR_F = ctrlnodes.fptr_f;
+                    }else{
+                        CurrentFilePTR_F = 0;
+                    }
+                    if(CurrentFileSize > (6 * DataBlockSize)){
+                        CurrentFilePTR_G = ctrlnodes.fptr_g;
+                    }else{
+                        CurrentFilePTR_G = 0;
+                    }
+                    if(CurrentFileSize > (7 * DataBlockSize)){
+                        CurrentFilePTR_H = ctrlnodes.fptr_h;
+                    }else{
+                        CurrentFilePTR_H = 0;
+                    }
+                    if(CurrentFileSize > (8 * DataBlockSize)){
+                        CurrentFilePTR_I = ctrlnodes.fptr_i;
+                    }else{
+                        CurrentFilePTR_I = 0;
+                    }
+                    if(CurrentFileSize > (9 * DataBlockSize)){
+                        CurrentFilePTR_J = ctrlnodes.fptr_j;
+                    }else{
+                        CurrentFilePTR_J = 0;
+                    }
+                    success = true; 
+                    break;
+                }
+            }
+            if (!success){
+                CurrentFileStatus = false;
+                std::cout<< "****Error inode for current file not found****\n";
+                error = true;
+            }
+            char buffer;
+            if(!error){
+                int t= 0;
+                if((CurrentFileOffset < DataBlockSize) && (t < size)){
+                    ifp.seekg(CurrentFilePTR + CurrentFileOffset);
+                    while((CurrentFileOffset < DataBlockSize) && (t < size) && ifp.read((char*)&buffer,sizeof(buffer))){
+                        std::cout<< buffer;
+                        t++;
+                        CurrentFileOffset++;
+                    }
+                }
+                if((CurrentFileOffset > DataBlockSize) && (CurrentFileOffset < (2 * DataBlockSize)) && (t < size)){
+                    ifp.seekg(CurrentFilePTR_B + CurrentFileOffset - DataBlockSize);
+                    while((CurrentFileOffset > DataBlockSize) && (CurrentFileOffset < (2 * DataBlockSize)) && (t < size)){
+                        ifp.read((char*)&buffer,sizeof(buffer));
+                        std::cout<< buffer;
+                        t++;
+                        CurrentFileOffset++;
+                    }
+                }
+                if((CurrentFileOffset > (2 * DataBlockSize)) && (CurrentFileOffset < (3 * DataBlockSize)) && (t < size)){
+                    ifp.seekg(CurrentFilePTR_C + CurrentFileOffset - (2 * DataBlockSize));
+                    while((CurrentFileOffset > (2 * DataBlockSize)) && (CurrentFileOffset < (3 * DataBlockSize)) && (t < size)){
+                        ifp.read((char*)&buffer,sizeof(buffer));
+                        std::cout<< buffer;
+                        t++;
+                        CurrentFileOffset++;
+                    }
+                }
+                if((CurrentFileOffset > (3 * DataBlockSize)) && (CurrentFileOffset < (4 * DataBlockSize)) && (t < size)){
+                    ifp.seekg(CurrentFilePTR_D + CurrentFileOffset - (3 * DataBlockSize));
+                    while((CurrentFileOffset > (3 * DataBlockSize)) && (CurrentFileOffset < (4 * DataBlockSize)) && (t < size)){
+                        ifp.read((char*)&buffer,sizeof(buffer));
+                        std::cout<< buffer;
+                        t++;
+                        CurrentFileOffset++;
+                    }
+                }
+                if((CurrentFileOffset > (4 * DataBlockSize)) && (CurrentFileOffset < (5 * DataBlockSize)) && (t < size)){
+                    ifp.seekg(CurrentFilePTR_E + CurrentFileOffset - (4 * DataBlockSize));
+                    while((CurrentFileOffset > (4 * DataBlockSize)) && (CurrentFileOffset < (5 * DataBlockSize)) && (t < size)){
+                        ifp.read((char*)&buffer,sizeof(buffer));
+                        std::cout<< buffer;
+                        t++;
+                        CurrentFileOffset++;
+                    }
+                }
+                if((CurrentFileOffset > (5 * DataBlockSize)) && (CurrentFileOffset < (6 * DataBlockSize)) && (t < size)){
+                    ifp.seekg(CurrentFilePTR_F + CurrentFileOffset - (5 * DataBlockSize));
+                    while((CurrentFileOffset > (5 * DataBlockSize)) && (CurrentFileOffset < (6 * DataBlockSize)) && (t < size)){
+                        ifp.read((char*)&buffer,sizeof(buffer));
+                        std::cout<< buffer;
+                        t++;
+                        CurrentFileOffset++;
+                    }
+                }
+                if((CurrentFileOffset > (6 * DataBlockSize)) && (CurrentFileOffset < (7 * DataBlockSize)) && (t < size)){
+                    ifp.seekg(CurrentFilePTR_G + CurrentFileOffset - (6 * DataBlockSize));
+                    while((CurrentFileOffset > (6 * DataBlockSize)) && (CurrentFileOffset < (7 * DataBlockSize)) && (t < size)){
+                        ifp.read((char*)&buffer,sizeof(buffer));
+                        std::cout<< buffer;
+                        t++;
+                        CurrentFileOffset++;
+                    }
+                }
+                if((CurrentFileOffset > (7 * DataBlockSize)) && (CurrentFileOffset < (8 * DataBlockSize)) && (t < size)){
+                    ifp.seekg(CurrentFilePTR_H + CurrentFileOffset - (7 * DataBlockSize));
+                    while((CurrentFileOffset > (7 * DataBlockSize)) && (CurrentFileOffset < (8 * DataBlockSize)) && (t < size)){
+                        ifp.read((char*)&buffer,sizeof(buffer));
+                        std::cout<< buffer;
+                        t++;
+                        CurrentFileOffset++;
+                    }
+                }
+                if((CurrentFileOffset > (8 * DataBlockSize)) && (CurrentFileOffset < (9 * DataBlockSize)) && (t < size)){
+                    ifp.seekg(CurrentFilePTR_I + CurrentFileOffset - (8 * DataBlockSize));
+                    while((CurrentFileOffset > (8 * DataBlockSize)) && (CurrentFileOffset < (9 * DataBlockSize)) && (t < size)){
+                        ifp.read((char*)&buffer,sizeof(buffer));
+                        std::cout<< buffer;
+                        t++;
+                        CurrentFileOffset++;
+                    }
+                }
+                if((CurrentFileOffset > (9 * DataBlockSize)) && (CurrentFileOffset < (10 * DataBlockSize)) && (t < size)){
+                    ifp.seekg(CurrentFilePTR_J + CurrentFileOffset - (9 * DataBlockSize));
+                    while((CurrentFileOffset > (9 * DataBlockSize)) && (CurrentFileOffset < (10 * DataBlockSize)) && (t < size)){
+                        ifp.read((char*)&buffer,sizeof(buffer));
+                        std::cout<< buffer;
+                        t++;
+                        CurrentFileOffset++;
+                    }
+                }
+            }else {
+                std::cout<<"****Error Accessing File System Disk****\n";
+            }
+        }
+        
+    }else {
+        std::cout<<"File is not open for reading\n";
+    }
+    if(!error)
+        std::cout<<"\nread Complete\n\n";
 }
 
 void Commands::write(int fd, std::string str){
@@ -586,143 +716,182 @@ void Commands::write(int fd, std::string str){
                 error = true;
             }
             
-            //Determine new size of file after write
-            CurrentFileSize = CurrentFileSize + len;
-            
-            //Allocate space for write if needed
-            if((CurrentFileSize > DataBlockSize) && !CurrentFilePTR_B){
-                CurrentFilePTR_B = GetNextDataBlock();
-            }
-            if((CurrentFileSize > (2 * DataBlockSize)) && !CurrentFilePTR_C){
-                CurrentFilePTR_C = GetNextDataBlock();
-            }
-            if((CurrentFileSize > (3 * DataBlockSize)) && !CurrentFilePTR_D){
-                CurrentFilePTR_D = GetNextDataBlock();
-            }
-            if((CurrentFileSize > (4 * DataBlockSize)) && !CurrentFilePTR_E){
-                CurrentFilePTR_E = GetNextDataBlock();
-            }
-            if((CurrentFileSize > (5 * DataBlockSize)) && !CurrentFilePTR_F){
-                CurrentFilePTR_F = GetNextDataBlock();
-            }
-            if((CurrentFileSize > (6 * DataBlockSize)) && !CurrentFilePTR_G){
-                CurrentFilePTR_G = GetNextDataBlock();
-            }
-            if((CurrentFileSize > (7 * DataBlockSize)) && !CurrentFilePTR_H){
-                CurrentFilePTR_H = GetNextDataBlock();
-            }
-            if((CurrentFileSize > (8 * DataBlockSize)) && !CurrentFilePTR_I){
-                CurrentFilePTR_I = GetNextDataBlock();
-            }
-            if((CurrentFileSize > (9 * DataBlockSize)) && !CurrentFilePTR_J){
-                CurrentFilePTR_J = GetNextDataBlock();
-            }
-            
-            //write string to file
-            int t;
-            if((CurrentFileOffset < DataBlockSize) && (t < len)){
-                fp.seekp(CurrentFilePTR + CurrentFileOffset);
-                while((CurrentFileOffset < DataBlockSize) && (t < len)){
-                    fp.write((char*)&buffer[t],sizeof(buffer[t]));
-                    t++;
-                    CurrentFileOffset++;
+            if(!error){
+                //Determine new size of file after write
+                CurrentFileSize = CurrentFileSize + len;
+
+                //Allocate space for write if needed
+                if((CurrentFileSize > DataBlockSize) && !CurrentFilePTR_B){
+                    int ndb = GetNextDataBlock();
+                    if(ndb){
+                        CurrentFilePTR_B = ndb;
+                    }else {
+                        error = true;
+                    }
+                }
+                if((CurrentFileSize > (2 * DataBlockSize)) && !CurrentFilePTR_C && !error){
+                    int ndb = GetNextDataBlock();
+                    if(ndb){
+                        CurrentFilePTR_C = ndb;
+                    }else {
+                        error = true;
+                    }
+                }
+                if((CurrentFileSize > (3 * DataBlockSize)) && !CurrentFilePTR_D && !error){
+                    int ndb = GetNextDataBlock();
+                    if(ndb){
+                        CurrentFilePTR_D = ndb;
+                    }else {
+                        error = true;
+                    }
+                }
+                if((CurrentFileSize > (4 * DataBlockSize)) && !CurrentFilePTR_E && !error){
+                    int ndb = GetNextDataBlock();
+                    if(ndb){
+                        CurrentFilePTR_E = ndb;
+                    }else {
+                        error = true;
+                    }
+                }
+                if((CurrentFileSize > (5 * DataBlockSize)) && !CurrentFilePTR_F && !error){
+                    int ndb = GetNextDataBlock();
+                    if(ndb){
+                        CurrentFilePTR_F = ndb;
+                    }else {
+                        error = true;
+                    }
+                }
+                if((CurrentFileSize > (6 * DataBlockSize)) && !CurrentFilePTR_G && !error){
+                    int ndb = GetNextDataBlock();
+                    if(ndb){
+                        CurrentFilePTR_G = ndb;
+                    }else {
+                        error = true;
+                    }
+                }
+                if((CurrentFileSize > (7 * DataBlockSize)) && !CurrentFilePTR_H && !error){
+                    int ndb = GetNextDataBlock();
+                    if(ndb){
+                        CurrentFilePTR_H = ndb;
+                    }else {
+                        error = true;
+                    }
+                }
+                if((CurrentFileSize > (8 * DataBlockSize)) && !CurrentFilePTR_I && !error){
+                    int ndb = GetNextDataBlock();
+                    if(ndb){
+                        CurrentFilePTR_I = ndb;
+                    }else {
+                        error = true;
+                    }
+                }
+                if((CurrentFileSize > (9 * DataBlockSize)) && !CurrentFilePTR_J && !error){
+                    int ndb = GetNextDataBlock();
+                    if(ndb){
+                        CurrentFilePTR_J = ndb;
+                    }else {
+                        error = true;
+                    }
+                }
+                if(!error){
+                    //write string to file
+                    int t= 1;
+                    if((CurrentFileOffset < DataBlockSize) && (t < (len-1))){
+                        fp.seekp(CurrentFilePTR + CurrentFileOffset);
+                        while((CurrentFileOffset < DataBlockSize) && (t < (len-1))){
+                            fp.write((char*)&buffer[t],sizeof(buffer[t]));
+                            t++;
+                            CurrentFileOffset++;
+                        }
+                    }
+                    if((CurrentFileOffset > DataBlockSize) && (CurrentFileOffset < (2 * DataBlockSize)) && (t < (len-1))){
+                        fp.seekp(CurrentFilePTR_B + CurrentFileOffset - DataBlockSize);
+                        while((CurrentFileOffset > DataBlockSize) && (CurrentFileOffset < (2 * DataBlockSize)) && (t < (len-1))){
+                            fp.write((char*)&buffer[t],sizeof(buffer[t]));
+                            t++;
+                            CurrentFileOffset++;
+                        }
+                    }
+                    if((CurrentFileOffset > (2 * DataBlockSize)) && (CurrentFileOffset < (3 * DataBlockSize)) && (t < (len-1))){
+                        fp.seekp(CurrentFilePTR_C + CurrentFileOffset - (2 * DataBlockSize));
+                        while((CurrentFileOffset > (2 * DataBlockSize)) && (CurrentFileOffset < (3 * DataBlockSize)) && (t < (len-1))){
+                            fp.write((char*)&buffer[t],sizeof(buffer[t]));
+                            t++;
+                            CurrentFileOffset++;
+                        }
+                    }
+                    if((CurrentFileOffset > (3 * DataBlockSize)) && (CurrentFileOffset < (4 * DataBlockSize)) && (t < (len-1))){
+                        fp.seekp(CurrentFilePTR_D + CurrentFileOffset - (3 * DataBlockSize));
+                        while((CurrentFileOffset > (3 * DataBlockSize)) && (CurrentFileOffset < (4 * DataBlockSize)) && (t < (len-1))){
+                            fp.write((char*)&buffer[t],sizeof(buffer[t]));
+                            t++;
+                            CurrentFileOffset++;
+                        }
+                    }
+                    if((CurrentFileOffset > (4 * DataBlockSize)) && (CurrentFileOffset < (5 * DataBlockSize)) && (t < (len-1))){
+                        fp.seekp(CurrentFilePTR_E + CurrentFileOffset - (4 * DataBlockSize));
+                        while((CurrentFileOffset > (4 * DataBlockSize)) && (CurrentFileOffset < (5 * DataBlockSize)) && (t < (len-1))){
+                            fp.write((char*)&buffer[t],sizeof(buffer[t]));
+                            t++;
+                            CurrentFileOffset++;
+                        }
+                    }
+                    if((CurrentFileOffset > (5 * DataBlockSize)) && (CurrentFileOffset < (6 * DataBlockSize)) && (t < (len-1))){
+                        fp.seekp(CurrentFilePTR_F + CurrentFileOffset - (5 * DataBlockSize));
+                        while((CurrentFileOffset > (5 * DataBlockSize)) && (CurrentFileOffset < (6 * DataBlockSize)) && (t < (len-1))){
+                            fp.write((char*)&buffer[t],sizeof(buffer[t]));
+                            t++;
+                            CurrentFileOffset++;
+                        }
+                    }
+                    if((CurrentFileOffset > (6 * DataBlockSize)) && (CurrentFileOffset < (7 * DataBlockSize)) && (t < (len-1))){
+                        fp.seekp(CurrentFilePTR_G + CurrentFileOffset - (6 * DataBlockSize));
+                        while((CurrentFileOffset > (6 * DataBlockSize)) && (CurrentFileOffset < (7 * DataBlockSize)) && (t < (len-1))){
+                            fp.write((char*)&buffer[t],sizeof(buffer[t]));
+                            t++;
+                            CurrentFileOffset++;
+                        }
+                    }
+                    if((CurrentFileOffset > (7 * DataBlockSize)) && (CurrentFileOffset < (8 * DataBlockSize)) && (t < (len-1))){
+                        fp.seekp(CurrentFilePTR_H + CurrentFileOffset - (7 * DataBlockSize));
+                        while((CurrentFileOffset > (7 * DataBlockSize)) && (CurrentFileOffset < (8 * DataBlockSize)) && (t < (len-1))){
+                            fp.write((char*)&buffer[t],sizeof(buffer[t]));
+                            t++;
+                            CurrentFileOffset++;
+                        }
+                    }
+                    if((CurrentFileOffset > (8 * DataBlockSize)) && (CurrentFileOffset < (9 * DataBlockSize)) && (t < (len-1))){
+                        fp.seekp(CurrentFilePTR_I + CurrentFileOffset - (8 * DataBlockSize));
+                        while((CurrentFileOffset > (8 * DataBlockSize)) && (CurrentFileOffset < (9 * DataBlockSize)) && (t < (len-1))){
+                            fp.write((char*)&buffer[t],sizeof(buffer[t]));
+                            t++;
+                            CurrentFileOffset++;
+                        }
+                    }
+                    if((CurrentFileOffset > (9 * DataBlockSize)) && (CurrentFileOffset < (10 * DataBlockSize)) && (t < (len-1))){
+                        fp.seekp(CurrentFilePTR_J + CurrentFileOffset - (9 * DataBlockSize));
+                        while((CurrentFileOffset > (9 * DataBlockSize)) && (CurrentFileOffset < (10 * DataBlockSize)) && (t < (len-1))){
+                            fp.write((char*)&buffer[t],sizeof(buffer[t]));
+                            t++;
+                            CurrentFileOffset++;
+                        }
+                    }
+
+                    //Update inode for current file
+                    fp.seekp(CurrentFileFDPTR); 
+                    ctrlnodes.size = CurrentFileSize;
+                    ctrlnodes.fptr_b = CurrentFilePTR_B;
+                    ctrlnodes.fptr_c = CurrentFilePTR_C;
+                    ctrlnodes.fptr_d = CurrentFilePTR_D;
+                    ctrlnodes.fptr_e = CurrentFilePTR_E;
+                    ctrlnodes.fptr_f = CurrentFilePTR_F;
+                    ctrlnodes.fptr_g = CurrentFilePTR_G;
+                    ctrlnodes.fptr_h = CurrentFilePTR_H;
+                    ctrlnodes.fptr_i = CurrentFilePTR_I;
+                    ctrlnodes.fptr_j = CurrentFilePTR_J;
+                    fp.write((char*)&ctrlnodes,sizeof(ctrlnodes));
                 }
             }
-            if((CurrentFileOffset > DataBlockSize) && (CurrentFileOffset < (2 * DataBlockSize)) && (t < len)){
-                fp.seekp(CurrentFilePTR_B + CurrentFileOffset - DataBlockSize);
-                while((CurrentFileOffset > DataBlockSize) && (CurrentFileOffset < (2 * DataBlockSize)) && (t < len)){
-                    char tmp = buffer[t];
-                    fp.write((char*)&buffer[t],sizeof(buffer[t]));
-                    t++;
-                    CurrentFileOffset++;
-                }
-            }
-            if((CurrentFileOffset > (2 * DataBlockSize)) && (CurrentFileOffset < (3 * DataBlockSize)) && (t < len)){
-                fp.seekp(CurrentFilePTR_C + CurrentFileOffset - (2 * DataBlockSize));
-                while((CurrentFileOffset > (2 * DataBlockSize)) && (CurrentFileOffset < (3 * DataBlockSize)) && (t < len)){
-                    char tmp = buffer[t];
-                    fp.write((char*)&buffer[t],sizeof(buffer[t]));
-                    t++;
-                    CurrentFileOffset++;
-                }
-            }
-            if((CurrentFileOffset > (3 * DataBlockSize)) && (CurrentFileOffset < (4 * DataBlockSize)) && (t < len)){
-                fp.seekp(CurrentFilePTR_D + CurrentFileOffset - (3 * DataBlockSize));
-                while((CurrentFileOffset > (3 * DataBlockSize)) && (CurrentFileOffset < (4 * DataBlockSize)) && (t < len)){
-                    char tmp = buffer[t];
-                    fp.write((char*)&buffer[t],sizeof(buffer[t]));
-                    t++;
-                    CurrentFileOffset++;
-                }
-            }
-            if((CurrentFileOffset > (4 * DataBlockSize)) && (CurrentFileOffset < (5 * DataBlockSize)) && (t < len)){
-                fp.seekp(CurrentFilePTR_E + CurrentFileOffset - (4 * DataBlockSize));
-                while((CurrentFileOffset > (4 * DataBlockSize)) && (CurrentFileOffset < (5 * DataBlockSize)) && (t < len)){
-                    char tmp = buffer[t];
-                    fp.write((char*)&buffer[t],sizeof(buffer[t]));
-                    t++;
-                    CurrentFileOffset++;
-                }
-            }
-            if((CurrentFileOffset > (5 * DataBlockSize)) && (CurrentFileOffset < (6 * DataBlockSize)) && (t < len)){
-                fp.seekp(CurrentFilePTR_F + CurrentFileOffset - (5 * DataBlockSize));
-                while((CurrentFileOffset > (5 * DataBlockSize)) && (CurrentFileOffset < (6 * DataBlockSize)) && (t < len)){
-                    char tmp = buffer[t];
-                    fp.write((char*)&buffer[t],sizeof(buffer[t]));
-                    t++;
-                    CurrentFileOffset++;
-                }
-            }
-            if((CurrentFileOffset > (6 * DataBlockSize)) && (CurrentFileOffset < (7 * DataBlockSize)) && (t < len)){
-                fp.seekp(CurrentFilePTR_G + CurrentFileOffset - (6 * DataBlockSize));
-                while((CurrentFileOffset > (6 * DataBlockSize)) && (CurrentFileOffset < (7 * DataBlockSize)) && (t < len)){
-                    char tmp = buffer[t];
-                    fp.write((char*)&buffer[t],sizeof(buffer[t]));
-                    t++;
-                    CurrentFileOffset++;
-                }
-            }
-            if((CurrentFileOffset > (7 * DataBlockSize)) && (CurrentFileOffset < (8 * DataBlockSize)) && (t < len)){
-                fp.seekp(CurrentFilePTR_H + CurrentFileOffset - (7 * DataBlockSize));
-                while((CurrentFileOffset > (7 * DataBlockSize)) && (CurrentFileOffset < (8 * DataBlockSize)) && (t < len)){
-                    char tmp = buffer[t];
-                    fp.write((char*)&buffer[t],sizeof(buffer[t]));
-                    t++;
-                    CurrentFileOffset++;
-                }
-            }
-            if((CurrentFileOffset > (8 * DataBlockSize)) && (CurrentFileOffset < (9 * DataBlockSize)) && (t < len)){
-                fp.seekp(CurrentFilePTR_I + CurrentFileOffset - (8 * DataBlockSize));
-                while((CurrentFileOffset > (8 * DataBlockSize)) && (CurrentFileOffset < (9 * DataBlockSize)) && (t < len)){
-                    char tmp = buffer[t];
-                    fp.write((char*)&buffer[t],sizeof(buffer[t]));
-                    t++;
-                    CurrentFileOffset++;
-                }
-            }
-            if((CurrentFileOffset > (9 * DataBlockSize)) && (CurrentFileOffset < (10 * DataBlockSize)) && (t < len)){
-                fp.seekp(CurrentFilePTR_J + CurrentFileOffset - (9 * DataBlockSize));
-                while((CurrentFileOffset > (9 * DataBlockSize)) && (CurrentFileOffset < (10 * DataBlockSize)) && (t < len)){
-                    char tmp = buffer[t];
-                    fp.write((char*)&buffer[t],sizeof(buffer[t]));
-                    t++;
-                    CurrentFileOffset++;
-                }
-            }
-            
-            //Update inode for current file
-            fp.seekp(CurrentFileFDPTR); 
-            ctrlnodes.size = CurrentFileSize;
-            ctrlnodes.fptr_b = CurrentFilePTR_B;
-            ctrlnodes.fptr_c = CurrentFilePTR_C;
-            ctrlnodes.fptr_d = CurrentFilePTR_D;
-            ctrlnodes.fptr_e = CurrentFilePTR_E;
-            ctrlnodes.fptr_f = CurrentFilePTR_F;
-            ctrlnodes.fptr_g = CurrentFilePTR_G;
-            ctrlnodes.fptr_h = CurrentFilePTR_H;
-            ctrlnodes.fptr_i = CurrentFilePTR_I;
-            ctrlnodes.fptr_j = CurrentFilePTR_J;
-            fp.write((char*)&ctrlnodes,sizeof(ctrlnodes));
         
         }else {
             std::cout<<"****Error Accessing File System Disk****\n";
@@ -731,12 +900,22 @@ void Commands::write(int fd, std::string str){
     }else {
         std::cout<<"File is not open for writing\n";
     }
-    std::cout<<"write Complete\n\n";
+    if(!error)
+        std::cout<<"write Complete\n\n";
 }
 
 void Commands::seek(int fd, int offset){
-    
-    //add code
+    if(CurrentFileStatus){
+        if(fd== CurrentFileFD){
+            CurrentFileOffset += offset;
+            std::cout<<"Offset has been adjusted to "<< CurrentFileOffset <<"\n";
+        }else{
+            std::cout<<"File is not open\n";
+        }
+    }else{
+        std::cout<<"No files are open\n";
+    }
+    std::cout<<"seek Complete\n\n";
 }
 
 void Commands::close(int fd){
@@ -754,11 +933,487 @@ void Commands::close(int fd){
 }
 
 void Commands::mkdir(std::string dirname){
-    //add code
+    
+    indexnode ctrlnodes;
+    directory templatdr;
+    int datablock;
+    bool error = false;
+    char newdirname[20];
+    
+    //open disk
+    std::fstream fp("filesystem.dat", std::ios::in|std::ios::out|std::ios::binary);
+    
+    //ensure "disk" opened correctly
+    if (fp){
+        
+        //find next available data block
+        int ndb = GetNextDataBlock();
+        if(ndb){
+            datablock = ndb;
+        }else {
+            error = true;
+        }
+        
+        if(!error){
+            
+            //convert inputed name to char array
+            strcpy(newdirname, dirname.c_str());
+            
+            //find spot in control block for new directory inode
+            fp.seekp(0); 
+            bool success = false;
+            int newdirID;
+            int i = 1;
+            while(fp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (fp.tellg() < FileSpacePTR))
+            {
+                if(ctrlnodes.valid == 0){               
+                    indexnode tmp = ctrlnodes;
+                    fp.seekp(-sizeof(tmp),std::ios::cur);
+                    
+                    //Create inode for new directory
+                    tmp.id = i;
+                    tmp.valid = 1;
+                    tmp.size = 0;
+                    tmp.linkcount = 1;
+                    tmp.fptr_a = datablock;
+                    tmp.fptr_b = 0;
+                    tmp.fptr_c = 0;
+                    tmp.fptr_d = 0;
+                    tmp.fptr_e = 0;
+                    tmp.fptr_f = 0;
+                    tmp.fptr_g = 0;
+                    tmp.fptr_h = 0;
+                    tmp.fptr_i = 0;
+                    tmp.fptr_j = 0;
+                    fp.write((char*)&tmp, sizeof(tmp));
+                    
+                    newdirID = tmp.id;
+                    success = true; 
+                    break;
+                }
+                i++;        
+            }
+            if (!success){
+                CurrentFileStatus = false;
+                std::cout<< "****Error Control Block is Full****\n";
+                error = true;
+            }
+            
+            //get info of current directory
+            int status = GetCurDirInfo();
+            if (!status){
+                CurrentFileStatus = false;
+                std::cout<< "****Error inode for current directory not found****\n";
+                error = true;
+            }
+            
+            //error checking
+            if(!error){
+
+                //find next blank entry in directory and initialize
+                if(CurrentDirSize < DataBlockSize){
+                    fp.seekg(CurrentDirPTR);
+                }
+                if((CurrentDirSize >= DataBlockSize) && (CurrentDirSize < (2 * DataBlockSize))){
+                    fp.seekg(CurrentDirPTR_B);
+                }
+                if((CurrentDirSize >= (2 * DataBlockSize)) && (CurrentDirSize < (3 * DataBlockSize))){
+                    fp.seekg(CurrentDirPTR_C);
+                }
+                if((CurrentDirSize >= (3 * DataBlockSize)) && (CurrentDirSize < (4 * DataBlockSize))){
+                    fp.seekg(CurrentDirPTR_D);
+                }
+                if((CurrentDirSize >= (4 * DataBlockSize)) && (CurrentDirSize < (5 * DataBlockSize))){
+                    fp.seekg(CurrentDirPTR_E);
+                }
+                if((CurrentDirSize >= (5 * DataBlockSize)) && (CurrentDirSize < (6 * DataBlockSize))){
+                    fp.seekg(CurrentDirPTR_F);
+                }
+                if((CurrentDirSize >= (6 * DataBlockSize)) && (CurrentDirSize < (7 * DataBlockSize))){
+                    fp.seekg(CurrentDirPTR_G);
+                }
+                if((CurrentDirSize >= (7 * DataBlockSize)) && (CurrentDirSize < (8 * DataBlockSize))){
+                    fp.seekg(CurrentDirPTR_H);
+                }
+                if((CurrentDirSize >= (8 * DataBlockSize)) && (CurrentDirSize < (9 * DataBlockSize))){
+                    fp.seekg(CurrentDirPTR_I);
+                }
+                if((CurrentDirSize >= (9 * DataBlockSize)) && (CurrentDirSize < (10 * DataBlockSize))){
+                    fp.seekg(CurrentDirPTR_J);
+                }
+
+                success = false;
+                int temp = fp.tellg();
+                while(fp.read((char*)&templatdr,sizeof(templatdr)) && (fp.tellg() <= (temp + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, "")== 0){
+                        directory tmp = templatdr;
+                        strcpy(tmp.dfname, dirname.c_str());
+                        tmp.dfid = newdirID;
+                        tmp.dir = 1;
+                        fp.seekp(-sizeof(tmp),std::ios::cur);
+                        fp.write((char*)&tmp, sizeof(tmp));
+                        std::cout<<"Directory "<< tmp.dfname << " added to "<< CurrentDir << "\n\n";
+                        success = true; 
+                        break;
+                    }          
+                }
+                if (!success){
+                    CurrentFileStatus = false;
+                    std::cout<< "****Error Directory is Full****\n";
+                    error = true;
+                }else{
+                    int temp2 = fp.tellg();
+                    CurrentDirSize += (temp2 - temp);
+                }
+                //update directory size data in inode
+                fp.seekg(0);
+                success = false;
+                while(fp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (fp.tellg() < FileSpacePTR))
+                {
+                    if(ctrlnodes.id == CurrentDirID){
+                        indexnode tmp2 = ctrlnodes;
+                        fp.seekp(-sizeof(tmp2),std::ios::cur);
+                        tmp2.size = CurrentDirSize;
+                        fp.write((char*)&tmp2, sizeof(tmp2));
+                        success = true; 
+                        break;
+                    }
+                }
+                if (!success){
+                    std::cout<< "****Error: Directory size data could not be updated****\n";
+                    error = true;
+                }
+            }
+        }
+    }else{
+        std::cout<<"****Error Accessing File System Disk****\n\n";
+    }
 }
 
 void Commands::rmdir(std::string dirname){
-    //add code
+    
+    indexnode ctrlnodes;
+    directory templatdr;
+    bool error = false;
+    bool success = false;
+    char deldirname[20];
+    int deldirID;
+    
+    //open disk
+    std::fstream fp("filesystem.dat", std::ios::in|std::ios::out|std::ios::binary);
+    
+    //ensure "disk" opened correctly
+    if (fp){
+        
+        //get info of current directory
+        int status = GetCurDirInfo();
+        if (!status){
+            CurrentFileStatus = false;
+            std::cout<< "****Error inode for current directory not found****\n";
+            error = true;
+        }
+        
+        if(!error){
+            //convert inputed name to char array
+            strcpy(deldirname, dirname.c_str());
+            
+            //go to current directory
+            fp.seekg(CurrentDirPTR);
+
+            //Search for directory to be deleted
+            while(fp.read((char*)&templatdr, sizeof(templatdr)) && (fp.tellg()< (CurrentDirPTR + DataBlockSize)))
+            {
+                if(strcmp(templatdr.dfname, deldirname)== 0){
+                    if(templatdr.dir == 1){
+                        directory tmp = templatdr;
+                        deldirID = tmp.dfid;
+                        strcpy(tmp.dfname, "");
+                        tmp.dfid = 0;
+                        fp.seekp(-sizeof(tmp),std::ios::cur);
+                        fp.write((char*)&tmp, sizeof(tmp));
+                        std::cout<<"Directory "<< deldirname << " removed from "<< CurrentDir << "\n\n";
+                        success = true; 
+                        break;
+                    }else {
+                        std::cout<< "****Error: This is a File****\n";
+                        error = true;
+                    }
+                }
+            }
+            
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_B && !success && !error){
+                fp.seekg(CurrentDirPTR_B);
+
+                //Search for directory to be deleted
+                while(fp.read((char*)&templatdr, sizeof(templatdr)) && (fp.tellg()< (CurrentDirPTR_B + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, deldirname)== 0){
+                        if(templatdr.dir == 1){
+                            directory tmp = templatdr;
+                            deldirID = tmp.dfid;
+                            strcpy(tmp.dfname, "");
+                            tmp.dfid = 0;
+                            fp.seekp(-sizeof(tmp),std::ios::cur);
+                            fp.write((char*)&tmp, sizeof(tmp));
+                            std::cout<<"Directory "<< deldirname << " removed from "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            
+            //go to next block of current directory, if it exists, to continue the search           
+            if(CurrentDirPTR_C && !success && !error){
+                fp.seekg(CurrentDirPTR_C);
+
+                //Search for directory to be deleted
+                while(fp.read((char*)&templatdr, sizeof(templatdr)) && (fp.tellg()< (CurrentDirPTR_C + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, deldirname)== 0){
+                        if(templatdr.dir == 1){
+                            directory tmp = templatdr;
+                            deldirID = tmp.dfid;
+                            strcpy(tmp.dfname, "");
+                            tmp.dfid = 0;
+                            fp.seekp(-sizeof(tmp),std::ios::cur);
+                            fp.write((char*)&tmp, sizeof(tmp));
+                            std::cout<<"Directory "<< deldirname << " removed from "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_D && !success && !error){
+                fp.seekg(CurrentDirPTR_D);
+
+                //Search for directory to be deleted
+                while(fp.read((char*)&templatdr, sizeof(templatdr)) && (fp.tellg()< (CurrentDirPTR_D + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, deldirname)== 0){
+                        if(templatdr.dir == 1){
+                            directory tmp = templatdr;
+                            deldirID = tmp.dfid;
+                            strcpy(tmp.dfname, "");
+                            tmp.dfid = 0;
+                            fp.seekp(-sizeof(tmp),std::ios::cur);
+                            fp.write((char*)&tmp, sizeof(tmp));
+                            std::cout<<"Directory "<< deldirname << " removed from "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_E && !success && !error){
+                fp.seekg(CurrentDirPTR_E);
+
+                //Search for directory to be deleted
+                while(fp.read((char*)&templatdr, sizeof(templatdr)) && (fp.tellg()< (CurrentDirPTR_E + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, deldirname)== 0){
+                        if(templatdr.dir == 1){
+                            directory tmp = templatdr;
+                            deldirID = tmp.dfid;
+                            strcpy(tmp.dfname, "");
+                            tmp.dfid = 0;
+                            fp.seekp(-sizeof(tmp),std::ios::cur);
+                            fp.write((char*)&tmp, sizeof(tmp));
+                            std::cout<<"Directory "<< deldirname << " removed from "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_F && !success && !error){
+                fp.seekg(CurrentDirPTR_F);
+
+                //Search for directory to be deleted
+                while(fp.read((char*)&templatdr, sizeof(templatdr)) && (fp.tellg()< (CurrentDirPTR_F + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, deldirname)== 0){
+                        if(templatdr.dir == 1){
+                            directory tmp = templatdr;
+                            deldirID = tmp.dfid;
+                            strcpy(tmp.dfname, "");
+                            tmp.dfid = 0;
+                            fp.seekp(-sizeof(tmp),std::ios::cur);
+                            fp.write((char*)&tmp, sizeof(tmp));
+                            std::cout<<"Directory "<< deldirname << " removed from "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_G && !success && !error){
+                fp.seekg(CurrentDirPTR_G);
+
+                //Search for directory to be deleted
+                while(fp.read((char*)&templatdr, sizeof(templatdr)) && (fp.tellg()< (CurrentDirPTR_G + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, deldirname)== 0){
+                        if(templatdr.dir == 1){
+                            directory tmp = templatdr;
+                            deldirID = tmp.dfid;
+                            strcpy(tmp.dfname, "");
+                            tmp.dfid = 0;
+                            fp.seekp(-sizeof(tmp),std::ios::cur);
+                            fp.write((char*)&tmp, sizeof(tmp));
+                            std::cout<<"Directory "<< deldirname << " removed from "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_H && !success && !error){
+                fp.seekg(CurrentDirPTR_H);
+
+                //Search for directory to be deleted
+                while(fp.read((char*)&templatdr, sizeof(templatdr)) && (fp.tellg()< (CurrentDirPTR_H + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, deldirname)== 0){
+                        if(templatdr.dir == 1){
+                            directory tmp = templatdr;
+                            deldirID = tmp.dfid;
+                            strcpy(tmp.dfname, "");
+                            tmp.dfid = 0;
+                            fp.seekp(-sizeof(tmp),std::ios::cur);
+                            fp.write((char*)&tmp, sizeof(tmp));
+                            std::cout<<"Directory "<< deldirname << " removed from "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_I && !success && !error){
+                fp.seekg(CurrentDirPTR_I);
+
+                //Search for directory to be deleted
+                while(fp.read((char*)&templatdr, sizeof(templatdr)) && (fp.tellg()< (CurrentDirPTR_I + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, deldirname)== 0){
+                        if(templatdr.dir == 1){
+                            directory tmp = templatdr;
+                            deldirID = tmp.dfid;
+                            strcpy(tmp.dfname, "");
+                            tmp.dfid = 0;
+                            fp.seekp(-sizeof(tmp),std::ios::cur);
+                            fp.write((char*)&tmp, sizeof(tmp));
+                            std::cout<<"Directory "<< deldirname << " removed from "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_J && !success && !error){
+                fp.seekg(CurrentDirPTR_J);
+
+                //Search for directory to be deleted
+                while(fp.read((char*)&templatdr, sizeof(templatdr)) && (fp.tellg()< (CurrentDirPTR_J + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, deldirname)== 0){
+                        if(templatdr.dir == 1){
+                            directory tmp = templatdr;
+                            deldirID = tmp.dfid;
+                            strcpy(tmp.dfname, "");
+                            tmp.dfid = 0;
+                            fp.seekp(-sizeof(tmp),std::ios::cur);
+                            fp.write((char*)&tmp, sizeof(tmp));
+                            std::cout<<"Directory "<< deldirname << " removed from "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            
+            if(!error){
+                //find inode of deleted directory to invalidate
+                fp.seekg(0); 
+                success = false;
+                while(fp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (fp.tellg() < FileSpacePTR))
+                {
+                    if(ctrlnodes.id == deldirID){               
+                        indexnode tmp = ctrlnodes;
+                        fp.seekp(-sizeof(tmp),std::ios::cur);
+
+                        //invalidate inode for directory
+                        tmp.valid = 0;
+                        fp.write((char*)&tmp, sizeof(tmp));
+                        success = true; 
+                        break;
+                    }
+                }
+                if (!success){
+                    std::cout<< "****Inode of deleted directory was not found to invalidate****\n";
+                    error = true;
+                }
+
+                //update current directory size data in inode
+                fp.seekg(0);
+                success = false;
+                while(fp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (fp.tellg() < FileSpacePTR))
+                {
+                    if(ctrlnodes.id == CurrentDirID){
+                        indexnode tmp2 = ctrlnodes;
+                        fp.seekp(-sizeof(tmp2),std::ios::cur);
+                        tmp2.size = CurrentDirSize;
+                        fp.write((char*)&tmp2, sizeof(tmp2));
+                        success = true; 
+                        break;
+                    }
+                }
+                if (!success){
+                    std::cout<< "****Error: Directory size data could not be updated****\n";
+                    error = true;
+                }
+            }
+        }
+    }else{
+        std::cout<<"****Error Accessing File System Disk****\n\n";
+    }
 }
 
 void Commands::cd(std::string dirname){
@@ -1076,5 +1731,85 @@ int Commands::GetNextDataBlock(){
         }
     }else{
         std::cout<<"****Error Accessing File System Disk****\n";
+        return 0;
+    }
+}
+
+int Commands::GetCurDirInfo(){
+    
+    indexnode ctrlnodes;
+    bool success = false;
+    
+    //open filesystem "disk" for reading
+    std::ifstream ifp ("filesystem.dat", std::ios::in | std::ios::binary);
+    
+    if(ifp){
+
+        //get info of current directory
+        ifp.seekg(0);
+        bool success = false;
+        while(ifp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (ifp.tellg() < FileSpacePTR))
+        {
+            if(ctrlnodes.id == CurrentDirID){               
+                CurrentDirSize = ctrlnodes.size;
+                CurrentDirPTR = ctrlnodes.fptr_a;
+                if(CurrentDirSize > DataBlockSize){
+                    CurrentDirPTR_B = ctrlnodes.fptr_b;
+                }else{
+                    CurrentDirPTR_B = 0;
+                }
+                if(CurrentDirSize > (2 * DataBlockSize)){
+                    CurrentDirPTR_C = ctrlnodes.fptr_c;
+                }else{
+                    CurrentDirPTR_C = 0;
+                }
+                if(CurrentDirSize > (3 * DataBlockSize)){
+                    CurrentDirPTR_D = ctrlnodes.fptr_d;
+                }else{
+                    CurrentDirPTR_D = 0;
+                }
+                if(CurrentDirSize > (4 * DataBlockSize)){
+                    CurrentDirPTR_E = ctrlnodes.fptr_e;
+                }else{
+                    CurrentDirPTR_E = 0;
+                }
+                if(CurrentDirSize > (5 * DataBlockSize)){
+                    CurrentDirPTR_F = ctrlnodes.fptr_f;
+                }else{
+                    CurrentDirPTR_F = 0;
+                }
+                if(CurrentDirSize > (6 * DataBlockSize)){
+                    CurrentDirPTR_G = ctrlnodes.fptr_g;
+                }else{
+                    CurrentDirPTR_G = 0;
+                }
+                if(CurrentDirSize > (7 * DataBlockSize)){
+                    CurrentDirPTR_H = ctrlnodes.fptr_h;
+                }else{
+                    CurrentDirPTR_H = 0;
+                }
+                if(CurrentDirSize > (8 * DataBlockSize)){
+                    CurrentDirPTR_I = ctrlnodes.fptr_i;
+                }else{
+                    CurrentDirPTR_I = 0;
+                }
+                if(CurrentDirSize > (9 * DataBlockSize)){
+                    CurrentDirPTR_J = ctrlnodes.fptr_j;
+                }else{
+                    CurrentDirPTR_J = 0;
+                }
+                success = true;
+                break;
+            }
+        }
+        if(success){
+            return 1;
+        }else{
+            return 0;
+        }
+        
+    }else{
+        std::cout<<"****Error Accessing File System Disk****\n";
+        return 0;
     }
 }
