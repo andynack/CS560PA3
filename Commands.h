@@ -39,6 +39,7 @@ private:
     int GetCurDirInfo();
     int SearchForDirectoryName(char desiredir[20]);
     int SearchForDirectoryID(int ID);
+    int ReadSrcFile();
 };
 
 #endif	/* COMMANDS_H */
