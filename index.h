@@ -60,7 +60,6 @@ int CurrentFilePTR_H; //8th Pointer for current file
 int CurrentFilePTR_I; //9th Pointer for current file
 int CurrentFilePTR_J; //10th Pointer for current file
 char CurrentDir[20]; //Name of current directory
-int CurrentDirOffset; //Offset # of bytes from beginning of current directory
 int CurrentDirID; //inode id# for opened file
 int CurrentDirSize; //Size of current directory
 int CurrentDirPTR; //Pointer for current directory
@@ -73,5 +72,7 @@ int CurrentDirPTR_G; //7th Pointer for current directory
 int CurrentDirPTR_H; //8th Pointer for current directory
 int CurrentDirPTR_I; //9th Pointer for current directory
 int CurrentDirPTR_J; //10th Pointer for current directory
+int PrevDir[20]; //record of last 20 previous directories
+int PrevDirPtr; //Pointer to next spot in previous directory array
 
 #endif	/* INDEX_H */

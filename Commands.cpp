@@ -19,8 +19,10 @@ Commands::Commands() {
     DataBlockSize = 1024; //Defining size of datablocks
     strcpy(CurrentDir, "Root"); //intializing root as current directory
     CurrentDirPTR = FileSpacePTR; //intializing root as current directory
-    CurrentDirOffset = 0;
-    CurrentDirID = 1;
+//    CurrentDirOffset = 0;
+    CurrentDirID = 0;
+    PrevDirPtr = 0;
+    PrevDir[PrevDirPtr]= 0;
     CurrentFileStatus = false;
     std::cout<< "\nFile System Ready To Receive Commands\n\n";
 }
@@ -46,7 +48,7 @@ void Commands::mkfs() {
 
         //initialize Root Directory inode
         ofs.seekp(0); 
-        ctrlnodes.id = 1;
+        ctrlnodes.id = 0;
         ctrlnodes.valid = 1;
         ctrlnodes.linkcount = 1;
         ctrlnodes.size = 0;
@@ -325,7 +327,7 @@ void Commands::open(std::string filename, std::string fg){
                     //find unused inode and initialize                    
                     fp.seekg(0);
                     bool success = false;
-                    int i = 1;
+                    int i = 0;
                     while(fp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (fp.tellg() < FileSpacePTR))
                     {
                         if(ctrlnodes.valid == 0){               
@@ -963,7 +965,7 @@ void Commands::mkdir(std::string dirname){
             fp.seekp(0); 
             bool success = false;
             int newdirID;
-            int i = 1;
+            int i = 0;
             while(fp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (fp.tellg() < FileSpacePTR))
             {
                 if(ctrlnodes.valid == 0){               
@@ -1122,6 +1124,7 @@ void Commands::rmdir(std::string dirname){
             fp.seekg(CurrentDirPTR);
 
             //Search for directory to be deleted
+//add code to check to see if directory is empty or not, only delete if empty
             while(fp.read((char*)&templatdr, sizeof(templatdr)) && (fp.tellg()< (CurrentDirPTR + DataBlockSize)))
             {
                 if(strcmp(templatdr.dfname, deldirname)== 0){
@@ -1417,7 +1420,351 @@ void Commands::rmdir(std::string dirname){
 }
 
 void Commands::cd(std::string dirname){
-    //add code
+    
+    indexnode ctrlnodes;
+    directory templatdr;
+    bool error = false;
+    bool success = false;
+        
+    //convert inputed name to char array
+    char desiredirname[20];
+    strcpy(desiredirname, dirname.c_str());
+    
+    //search for special character
+    if(strcmp(desiredirname, "~")== 0){
+        if (PrevDir[PrevDirPtr - 1]== 0){
+            strcpy(CurrentDir, "Root"); //set root as current directory
+            CurrentDirPTR = FileSpacePTR; //set root as current directory
+            CurrentDirID = 0;
+            //get info of current directory
+            int status = GetCurDirInfo();
+            if (!status){
+                CurrentFileStatus = false;
+                std::cout<< "****Error information for current directory not found****\n";
+                error = true;
+            }
+            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+            
+        } else {
+            if (CurrentDirID != 0){
+                PrevDir[PrevDirPtr]= CurrentDirID;
+                std::cout<< "Directory being left: "<<PrevDir[PrevDirPtr]<< "\n";
+                PrevDirPtr -= 2;
+                std::cout<< "second previous Directory: "<<PrevDir[PrevDirPtr]<< "\n";
+                CurrentDirID = PrevDir[PrevDirPtr];
+                PrevDirPtr++;
+                std::cout<< "Current Directory: "<<PrevDir[PrevDirPtr]<< "\n";
+                int status = SearchForDirectoryID(PrevDir[PrevDirPtr]);
+                if (!status){
+                    CurrentFileStatus = false;
+                    std::cout<< "****Error information for current directory not found****\n";
+                    error = true;
+                }else{
+                    success = true;
+                }
+            }else{
+                std::cout<< "****Error current directory is already Root****\n\n";
+            }
+        }
+    }else{
+        PrevDir[PrevDirPtr]= CurrentDirID;
+        std::cout<< "Directory being left: "<<PrevDir[PrevDirPtr]<< "\n";
+        SearchForDirectoryName(desiredirname);
+        PrevDirPtr++;
+        std::cout<< "Next spot in Array: "<<PrevDir[PrevDirPtr]<< "\n";
+    }
+/*    //open disk
+    std::fstream ifp("filesystem.dat", std::ios::in|std::ios::binary);
+    
+    //ensure "disk" opened correctly
+    if (ifp){
+        
+        //get info of current directory
+        int status = GetCurDirInfo();
+        if (!status){
+            CurrentFileStatus = false;
+            std::cout<< "****Error information for current directory not found****\n";
+            error = true;
+        }
+        
+        if(!error){
+            //convert inputed name to char array
+            strcpy(desiredirname, dirname.c_str());
+            
+            //go to current directory
+            ifp.seekg(CurrentDirPTR);
+
+            //Search for desired directory
+            while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR + DataBlockSize)))
+            {
+                if(strcmp(templatdr.dfname, desiredirname)== 0){
+                    if(templatdr.dir == 1){
+                        CurrentDirID = templatdr.dfid;
+                        strcpy(CurrentDir, templatdr.dfname);
+                        int status = GetCurDirInfo();
+                        if (!status){
+                            CurrentFileStatus = false;
+                            std::cout<< "****Error information for current directory not found****\n";
+                            error = true;
+                        }
+                        std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                        success = true; 
+                        break;
+                    }else {
+                        std::cout<< "****Error: This is a File****\n";
+                        error = true;
+                    }
+                }
+            }
+            
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_B && !success && !error){
+                ifp.seekg(CurrentDirPTR_B);
+
+                //Search for desired directory
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_B + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, desiredirname)== 0){
+                        if(templatdr.dir == 1){
+                            CurrentDirID = templatdr.dfid;
+                            strcpy(CurrentDir, templatdr.dfname);
+                            int status = GetCurDirInfo();
+                            if (!status){
+                                CurrentFileStatus = false;
+                                std::cout<< "****Error information for current directory not found****\n";
+                                error = true;
+                            }
+                            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            
+            //go to next block of current directory, if it exists, to continue the search           
+            if(CurrentDirPTR_C && !success && !error){
+                ifp.seekg(CurrentDirPTR_C);
+
+                //Search for desired directory
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_C + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, desiredirname)== 0){
+                        if(templatdr.dir == 1){
+                            CurrentDirID = templatdr.dfid;
+                            strcpy(CurrentDir, templatdr.dfname);
+                            int status = GetCurDirInfo();
+                            if (!status){
+                                CurrentFileStatus = false;
+                                std::cout<< "****Error information for current directory not found****\n";
+                                error = true;
+                            }
+                            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_D && !success && !error){
+                ifp.seekg(CurrentDirPTR_D);
+
+                //Search for desired directory
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_D + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, desiredirname)== 0){
+                        if(templatdr.dir == 1){
+                            CurrentDirID = templatdr.dfid;
+                            strcpy(CurrentDir, templatdr.dfname);
+                            int status = GetCurDirInfo();
+                            if (!status){
+                                CurrentFileStatus = false;
+                                std::cout<< "****Error information for current directory not found****\n";
+                                error = true;
+                            }
+                            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_E && !success && !error){
+                ifp.seekg(CurrentDirPTR_E);
+
+                //Search for desired directory
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_E + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, desiredirname)== 0){
+                        if(templatdr.dir == 1){
+                            CurrentDirID = templatdr.dfid;
+                            strcpy(CurrentDir, templatdr.dfname);
+                            int status = GetCurDirInfo();
+                            if (!status){
+                                CurrentFileStatus = false;
+                                std::cout<< "****Error information for current directory not found****\n";
+                                error = true;
+                            }
+                            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_F && !success && !error){
+                ifp.seekg(CurrentDirPTR_F);
+
+                //Search for desired directory
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_F + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, desiredirname)== 0){
+                        if(templatdr.dir == 1){
+                            CurrentDirID = templatdr.dfid;
+                            strcpy(CurrentDir, templatdr.dfname);
+                            int status = GetCurDirInfo();
+                            if (!status){
+                                CurrentFileStatus = false;
+                                std::cout<< "****Error information for current directory not found****\n";
+                                error = true;
+                            }
+                            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_G && !success && !error){
+                ifp.seekg(CurrentDirPTR_G);
+
+                //Search for desired directory
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_G + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, desiredirname)== 0){
+                        if(templatdr.dir == 1){
+                            CurrentDirID = templatdr.dfid;
+                            strcpy(CurrentDir, templatdr.dfname);
+                            int status = GetCurDirInfo();
+                            if (!status){
+                                CurrentFileStatus = false;
+                                std::cout<< "****Error information for current directory not found****\n";
+                                error = true;
+                            }
+                            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_H && !success && !error){
+                ifp.seekg(CurrentDirPTR_H);
+
+                //Search for desired directory
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_H + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, desiredirname)== 0){
+                        if(templatdr.dir == 1){
+                            CurrentDirID = templatdr.dfid;
+                            strcpy(CurrentDir, templatdr.dfname);
+                            int status = GetCurDirInfo();
+                            if (!status){
+                                CurrentFileStatus = false;
+                                std::cout<< "****Error information for current directory not found****\n";
+                                error = true;
+                            }
+                            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_I && !success && !error){
+                ifp.seekg(CurrentDirPTR_I);
+
+                //Search for desired directory
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_I + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, desiredirname)== 0){
+                        if(templatdr.dir == 1){
+                            CurrentDirID = templatdr.dfid;
+                            strcpy(CurrentDir, templatdr.dfname);
+                            int status = GetCurDirInfo();
+                            if (!status){
+                                CurrentFileStatus = false;
+                                std::cout<< "****Error information for current directory not found****\n";
+                                error = true;
+                            }
+                            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_J && !success && !error){
+                ifp.seekg(CurrentDirPTR_J);
+
+                //Search for desired directory
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_J + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, desiredirname)== 0){
+                        if(templatdr.dir == 1){
+                            CurrentDirID = templatdr.dfid;
+                            strcpy(CurrentDir, templatdr.dfname);
+                            int status = GetCurDirInfo();
+                            if (!status){
+                                CurrentFileStatus = false;
+                                std::cout<< "****Error information for current directory not found****\n";
+                                error = true;
+                            }
+                            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+        }
+    }else{
+        std::cout<<"****Error Accessing File System Disk****\n\n";
+    }*/
 }
 
 void Commands::link(std::string src, std::string dest){
@@ -1810,6 +2157,616 @@ int Commands::GetCurDirInfo(){
         
     }else{
         std::cout<<"****Error Accessing File System Disk****\n";
+        return 0;
+    }
+}
+
+int Commands::SearchForDirectoryName(char desiredir[20]){
+    //Searches directory set by ID # to be current for desired directory name
+    indexnode ctrlnodes;
+    directory templatdr;
+    bool error = false;
+    bool success = false;
+    
+    //open disk
+    std::fstream ifp("filesystem.dat", std::ios::in|std::ios::binary);
+    
+    //ensure "disk" opened correctly
+    if (ifp){
+        
+        //get info of current directory
+        int status = GetCurDirInfo();
+        if (!status){
+            CurrentFileStatus = false;
+            std::cout<< "****Error information for current directory not found****\n";
+            error = true;
+        }
+        
+        if(!error){
+            
+            //go to current directory
+            ifp.seekg(CurrentDirPTR);
+
+            //Search for desired directory
+            while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR + DataBlockSize)) && !error)
+            {
+                if(strcmp(templatdr.dfname, desiredir)== 0){
+                    if(templatdr.dir == 1){
+                        CurrentDirID = templatdr.dfid;
+                        strcpy(CurrentDir, templatdr.dfname);
+                        int status = GetCurDirInfo();
+                        if (!status){
+                            CurrentFileStatus = false;
+                            std::cout<< "****Error information for current directory not found****\n";
+                            error = true;
+                        }
+                        std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                        success = true; 
+                        break;
+                    }else {
+                        std::cout<< "****Error: This is a File****\n";
+                        error = true;
+                    }
+                }
+            }
+            
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_B && !success && !error){
+                ifp.seekg(CurrentDirPTR_B);
+
+                //Search for desired directory
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_B + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, desiredir)== 0){
+                        if(templatdr.dir == 1){
+                            CurrentDirID = templatdr.dfid;
+                            strcpy(CurrentDir, templatdr.dfname);
+                            int status = GetCurDirInfo();
+                            if (!status){
+                                CurrentFileStatus = false;
+                                std::cout<< "****Error information for current directory not found****\n";
+                                error = true;
+                            }
+                            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            
+            //go to next block of current directory, if it exists, to continue the search           
+            if(CurrentDirPTR_C && !success && !error){
+                ifp.seekg(CurrentDirPTR_C);
+
+                //Search for desired directory
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_C + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, desiredir)== 0){
+                        if(templatdr.dir == 1){
+                            CurrentDirID = templatdr.dfid;
+                            strcpy(CurrentDir, templatdr.dfname);
+                            int status = GetCurDirInfo();
+                            if (!status){
+                                CurrentFileStatus = false;
+                                std::cout<< "****Error information for current directory not found****\n";
+                                error = true;
+                            }
+                            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_D && !success && !error){
+                ifp.seekg(CurrentDirPTR_D);
+
+                //Search for desired directory
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_D + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, desiredir)== 0){
+                        if(templatdr.dir == 1){
+                            CurrentDirID = templatdr.dfid;
+                            strcpy(CurrentDir, templatdr.dfname);
+                            int status = GetCurDirInfo();
+                            if (!status){
+                                CurrentFileStatus = false;
+                                std::cout<< "****Error information for current directory not found****\n";
+                                error = true;
+                            }
+                            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_E && !success && !error){
+                ifp.seekg(CurrentDirPTR_E);
+
+                //Search for desired directory
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_E + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, desiredir)== 0){
+                        if(templatdr.dir == 1){
+                            CurrentDirID = templatdr.dfid;
+                            strcpy(CurrentDir, templatdr.dfname);
+                            int status = GetCurDirInfo();
+                            if (!status){
+                                CurrentFileStatus = false;
+                                std::cout<< "****Error information for current directory not found****\n";
+                                error = true;
+                            }
+                            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_F && !success && !error){
+                ifp.seekg(CurrentDirPTR_F);
+
+                //Search for desired directory
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_F + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, desiredir)== 0){
+                        if(templatdr.dir == 1){
+                            CurrentDirID = templatdr.dfid;
+                            strcpy(CurrentDir, templatdr.dfname);
+                            int status = GetCurDirInfo();
+                            if (!status){
+                                CurrentFileStatus = false;
+                                std::cout<< "****Error information for current directory not found****\n";
+                                error = true;
+                            }
+                            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_G && !success && !error){
+                ifp.seekg(CurrentDirPTR_G);
+
+                //Search for desired directory
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_G + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, desiredir)== 0){
+                        if(templatdr.dir == 1){
+                            CurrentDirID = templatdr.dfid;
+                            strcpy(CurrentDir, templatdr.dfname);
+                            int status = GetCurDirInfo();
+                            if (!status){
+                                CurrentFileStatus = false;
+                                std::cout<< "****Error information for current directory not found****\n";
+                                error = true;
+                            }
+                            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_H && !success && !error){
+                ifp.seekg(CurrentDirPTR_H);
+
+                //Search for desired directory
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_H + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, desiredir)== 0){
+                        if(templatdr.dir == 1){
+                            CurrentDirID = templatdr.dfid;
+                            strcpy(CurrentDir, templatdr.dfname);
+                            int status = GetCurDirInfo();
+                            if (!status){
+                                CurrentFileStatus = false;
+                                std::cout<< "****Error information for current directory not found****\n";
+                                error = true;
+                            }
+                            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_I && !success && !error){
+                ifp.seekg(CurrentDirPTR_I);
+
+                //Search for desired directory
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_I + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, desiredir)== 0){
+                        if(templatdr.dir == 1){
+                            CurrentDirID = templatdr.dfid;
+                            strcpy(CurrentDir, templatdr.dfname);
+                            int status = GetCurDirInfo();
+                            if (!status){
+                                CurrentFileStatus = false;
+                                std::cout<< "****Error information for current directory not found****\n";
+                                error = true;
+                            }
+                            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_J && !success && !error){
+                ifp.seekg(CurrentDirPTR_J);
+
+                //Search for desired directory
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_J + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, desiredir)== 0){
+                        if(templatdr.dir == 1){
+                            CurrentDirID = templatdr.dfid;
+                            strcpy(CurrentDir, templatdr.dfname);
+                            int status = GetCurDirInfo();
+                            if (!status){
+                                CurrentFileStatus = false;
+                                std::cout<< "****Error information for current directory not found****\n";
+                                error = true;
+                            }
+                            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+        }
+        if(success){
+            return 1;
+        }else{
+            return 0;
+        }
+    }else{
+        std::cout<<"****Error Accessing File System Disk****\n\n";
+        return 0;
+    }
+}
+
+int Commands::SearchForDirectoryID(int ID){
+    //Searches directory set by ID # to be current for desired directory ID #
+    indexnode ctrlnodes;
+    directory templatdr;
+    bool error = false;
+    bool success = false;
+    
+    //open disk
+    std::fstream ifp("filesystem.dat", std::ios::in|std::ios::binary);
+    
+    //ensure "disk" opened correctly
+    if (ifp){
+        
+        //get info of current directory
+        int status = GetCurDirInfo();
+        if (!status){
+            CurrentFileStatus = false;
+            std::cout<< "****Error information for current directory not found****\n";
+            error = true;
+        }
+        
+        if(!error){
+            
+            //go to current directory
+            ifp.seekg(CurrentDirPTR);
+
+            //Search for desired directory
+            while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR + DataBlockSize)) && !error)
+            {
+                if(templatdr.dfid == ID){
+                    if(templatdr.dir == 1){
+                        CurrentDirID = templatdr.dfid;
+                        strcpy(CurrentDir, templatdr.dfname);
+                        int status = GetCurDirInfo();
+                        if (!status){
+                            CurrentFileStatus = false;
+                            std::cout<< "****Error information for current directory not found****\n";
+                            error = true;
+                        }
+                        std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                        success = true; 
+                        break;
+                    }else {
+                        std::cout<< "****Error: This is a File****\n";
+                        error = true;
+                    }
+                }
+            }
+            
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_B && !success && !error){
+                ifp.seekg(CurrentDirPTR_B);
+
+                //Search for desired directory
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_B + DataBlockSize)) && !error)
+                {
+                    if(templatdr.dfid == ID){
+                        if(templatdr.dir == 1){
+                            CurrentDirID = templatdr.dfid;
+                            strcpy(CurrentDir, templatdr.dfname);
+                            int status = GetCurDirInfo();
+                            if (!status){
+                                CurrentFileStatus = false;
+                                std::cout<< "****Error information for current directory not found****\n";
+                                error = true;
+                            }
+                            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            
+            //go to next block of current directory, if it exists, to continue the search           
+            if(CurrentDirPTR_C && !success && !error){
+                ifp.seekg(CurrentDirPTR_C);
+
+                //Search for desired directory
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_C + DataBlockSize)) && !error)
+                {
+                    if(templatdr.dfid == ID){
+                        if(templatdr.dir == 1){
+                            CurrentDirID = templatdr.dfid;
+                            strcpy(CurrentDir, templatdr.dfname);
+                            int status = GetCurDirInfo();
+                            if (!status){
+                                CurrentFileStatus = false;
+                                std::cout<< "****Error information for current directory not found****\n";
+                                error = true;
+                            }
+                            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_D && !success && !error){
+                ifp.seekg(CurrentDirPTR_D);
+
+                //Search for desired directory
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_D + DataBlockSize)) && !error)
+                {
+                    if(templatdr.dfid == ID){
+                        if(templatdr.dir == 1){
+                            CurrentDirID = templatdr.dfid;
+                            strcpy(CurrentDir, templatdr.dfname);
+                            int status = GetCurDirInfo();
+                            if (!status){
+                                CurrentFileStatus = false;
+                                std::cout<< "****Error information for current directory not found****\n";
+                                error = true;
+                            }
+                            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_E && !success && !error){
+                ifp.seekg(CurrentDirPTR_E);
+
+                //Search for desired directory
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_E + DataBlockSize)) && !error)
+                {
+                    if(templatdr.dfid == ID){
+                        if(templatdr.dir == 1){
+                            CurrentDirID = templatdr.dfid;
+                            strcpy(CurrentDir, templatdr.dfname);
+                            int status = GetCurDirInfo();
+                            if (!status){
+                                CurrentFileStatus = false;
+                                std::cout<< "****Error information for current directory not found****\n";
+                                error = true;
+                            }
+                            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_F && !success && !error){
+                ifp.seekg(CurrentDirPTR_F);
+
+                //Search for desired directory
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_F + DataBlockSize)) && !error)
+                {
+                    if(templatdr.dfid == ID){
+                        if(templatdr.dir == 1){
+                            CurrentDirID = templatdr.dfid;
+                            strcpy(CurrentDir, templatdr.dfname);
+                            int status = GetCurDirInfo();
+                            if (!status){
+                                CurrentFileStatus = false;
+                                std::cout<< "****Error information for current directory not found****\n";
+                                error = true;
+                            }
+                            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_G && !success && !error){
+                ifp.seekg(CurrentDirPTR_G);
+
+                //Search for desired directory
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_G + DataBlockSize)) && !error)
+                {
+                    if(templatdr.dfid == ID){
+                        if(templatdr.dir == 1){
+                            CurrentDirID = templatdr.dfid;
+                            strcpy(CurrentDir, templatdr.dfname);
+                            int status = GetCurDirInfo();
+                            if (!status){
+                                CurrentFileStatus = false;
+                                std::cout<< "****Error information for current directory not found****\n";
+                                error = true;
+                            }
+                            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_H && !success && !error){
+                ifp.seekg(CurrentDirPTR_H);
+
+                //Search for desired directory
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_H + DataBlockSize)) && !error)
+                {
+                    if(templatdr.dfid == ID){
+                        if(templatdr.dir == 1){
+                            CurrentDirID = templatdr.dfid;
+                            strcpy(CurrentDir, templatdr.dfname);
+                            int status = GetCurDirInfo();
+                            if (!status){
+                                CurrentFileStatus = false;
+                                std::cout<< "****Error information for current directory not found****\n";
+                                error = true;
+                            }
+                            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_I && !success && !error){
+                ifp.seekg(CurrentDirPTR_I);
+
+                //Search for desired directory
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_I + DataBlockSize)) && !error)
+                {
+                    if(templatdr.dfid == ID){
+                        if(templatdr.dir == 1){
+                            CurrentDirID = templatdr.dfid;
+                            strcpy(CurrentDir, templatdr.dfname);
+                            int status = GetCurDirInfo();
+                            if (!status){
+                                CurrentFileStatus = false;
+                                std::cout<< "****Error information for current directory not found****\n";
+                                error = true;
+                            }
+                            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_J && !success && !error){
+                ifp.seekg(CurrentDirPTR_J);
+
+                //Search for desired directory
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_J + DataBlockSize)) && !error)
+                {
+                    if(templatdr.dfid == ID){
+                        if(templatdr.dir == 1){
+                            CurrentDirID = templatdr.dfid;
+                            strcpy(CurrentDir, templatdr.dfname);
+                            int status = GetCurDirInfo();
+                            if (!status){
+                                CurrentFileStatus = false;
+                                std::cout<< "****Error information for current directory not found****\n";
+                                error = true;
+                            }
+                            std::cout<<"The current directory is now "<< CurrentDir << "\n\n";
+                            success = true; 
+                            break;
+                        }else {
+                            std::cout<< "****Error: This is a File****\n";
+                            error = true;
+                        }
+                    }
+                }
+            }
+        }
+        if(success){
+            return 1;
+        }else{
+            return 0;
+        }
+    }else{
+        std::cout<<"****Error Accessing File System Disk****\n\n";
         return 0;
     }
 }

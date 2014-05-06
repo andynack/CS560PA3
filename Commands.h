@@ -37,6 +37,8 @@ public:
 private:
     int GetNextDataBlock();
     int GetCurDirInfo();
+    int SearchForDirectoryName(char desiredir[20]);
+    int SearchForDirectoryID(int ID);
 };
 
 #endif	/* COMMANDS_H */
