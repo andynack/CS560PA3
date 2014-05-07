@@ -9,6 +9,9 @@
 #include <iostream>
 #include <cstring>
 #include <fstream>
+/*#include <sstream>
+#include <string>
+#include <vector>*/
 #include "index.h"
 #include "Commands.h"
 
@@ -80,7 +83,6 @@ int Commands::open(std::string filename, std::string fg){
     if (CurrentFileStatus){
         std::cout<<"File "<<CurrentFile<<" has already been opened. Only one file may be opened at a time.\n";
     }else {
-        bool error = false;
         int datablock = FileSpacePTR;
         directory templatdr;
         indexnode ctrlnodes;
@@ -630,8 +632,6 @@ void Commands::read(int fd, int size){
     }else {
         std::cout<<"File is not open for reading\n";
     }
-    if(!error)
-        std::cout<<"\nread Complete\n\n";
 }
 
 void Commands::write(int fd, std::string str){
@@ -899,8 +899,6 @@ void Commands::write(int fd, std::string str){
     }else {
         std::cout<<"File is not open for writing\n";
     }
-    if(!error)
-        std::cout<<"write Complete\n\n";
 }
 
 void Commands::seek(int fd, int offset){
@@ -914,7 +912,6 @@ void Commands::seek(int fd, int offset){
     }else{
         std::cout<<"No files are open\n";
     }
-    std::cout<<"seek Complete\n\n";
 }
 
 void Commands::close(int fd){
@@ -928,7 +925,6 @@ void Commands::close(int fd){
     }else{
         std::cout<<"No files are open\n";
     }
-    std::cout<<"close Complete\n\n";
 }
 
 void Commands::mkdir(std::string dirname){
@@ -1121,7 +1117,6 @@ void Commands::rmdir(std::string dirname){
             fp.seekg(CurrentDirPTR);
 
             //Search for directory to be deleted
-//add code to check to see if directory is empty or not, only delete if empty
             while(fp.read((char*)&templatdr, sizeof(templatdr)) && (fp.tellg()< (CurrentDirPTR + DataBlockSize)))
             {
                 if(strcmp(templatdr.dfname, deldirname)== 0){
@@ -1475,12 +1470,164 @@ void Commands::cd(std::string dirname){
         PrevDir[PrevDirPtr]= CurrentDirID;
         SearchForDirectoryName(desiredirname);
         PrevDirPtr++;
-        std::cout<< "Next spot in Array: "<<PrevDir[PrevDirPtr]<< "\n";
     }
 }
 
 void Commands::link(std::string src, std::string dest){
-    //add code
+    
+    bool success = false;
+    bool error = false;
+    directory templatdr;
+    indexnode ctrlnodes;
+    
+    //find src
+ /*   std::string buf;
+    int i = 0;
+    std::stringstream ss(src);
+    std::vector<std::string> tokens;
+    while(std::getline(ss, buf, '/')){
+	tokens.push_back(buf);
+    }
+    SrcFileID=0;
+    while(i<= tokens.size()){
+        std::cout<<"Tokens: "<< tokens[i]<<"\n";
+        SearchForSrcName(tokens[i]);
+        i++;
+    }*/
+    SearchForSrcName(src);
+    
+    std::cout <<"Source ID: " <<SrcFileID<<"\n";
+    int status = GetSrcInfo();
+    if (!status){
+        std::cout<< "****Error: information for source not found****\n";
+        error = true;
+    }
+ 
+    //convert inputed strings to char arrays to match the format used in the filesystem
+    
+    strcpy(DestFile, dest.c_str());
+    DestFileID = SrcFileID;
+
+    //open filesystem "disk" for reading and writing
+    std::fstream fp ("filesystem.dat", std::ios::in | std::ios::out | std::ios::binary);
+
+    //ensure "disk" opened correctly
+    if (fp){
+
+        //get info of current directory
+        int status = GetCurDirInfo();
+        if (!status){
+            std::cout<< "****Error inode for current directory not found****\n";
+            error = true;
+        }
+
+        //error checking
+        if(!error){
+            
+            //go to current directory
+            fp.seekg(CurrentDirPTR);
+            
+            //find next blank entry in directory and initialize
+            if(CurrentDirSize < DataBlockSize){
+                fp.seekg(CurrentDirPTR);
+            }
+            if((CurrentDirSize > DataBlockSize) && (CurrentDirSize < (2 * DataBlockSize))){
+                fp.seekg(CurrentDirPTR_B);
+            }
+            if((CurrentDirSize > (2 * DataBlockSize)) && (CurrentDirSize < (3 * DataBlockSize))){
+                fp.seekg(CurrentDirPTR_C);
+            }
+            if((CurrentDirSize > (3 * DataBlockSize)) && (CurrentDirSize < (4 * DataBlockSize))){
+                fp.seekg(CurrentDirPTR_D);
+            }
+            if((CurrentDirSize > (4 * DataBlockSize)) && (CurrentDirSize < (5 * DataBlockSize))){
+                fp.seekg(CurrentDirPTR_E);
+            }
+            if((CurrentDirSize > (5 * DataBlockSize)) && (CurrentDirSize < (6 * DataBlockSize))){
+                fp.seekg(CurrentDirPTR_F);
+            }
+            if((CurrentDirSize > (6 * DataBlockSize)) && (CurrentDirSize < (7 * DataBlockSize))){
+                fp.seekg(CurrentDirPTR_G);
+            }
+            if((CurrentDirSize > (7 * DataBlockSize)) && (CurrentDirSize < (8 * DataBlockSize))){
+                fp.seekg(CurrentDirPTR_H);
+            }
+            if((CurrentDirSize > (8 * DataBlockSize)) && (CurrentDirSize < (9 * DataBlockSize))){
+                fp.seekg(CurrentDirPTR_I);
+            }
+            if((CurrentDirSize > (9 * DataBlockSize)) && (CurrentDirSize < (10 * DataBlockSize))){
+                fp.seekg(CurrentDirPTR_J);
+            }
+
+            success = false;
+            int temp = fp.tellg();
+            while(fp.read((char*)&templatdr,sizeof(templatdr)) && (fp.tellg() <= (temp + DataBlockSize)))
+            {
+                if(strcmp(templatdr.dfname, "")== 0){
+                    directory tmp = templatdr;
+                    strcpy(tmp.dfname, DestFile);
+                    tmp.dfid = DestFileID;
+                    tmp.dir = 2;
+                    fp.seekp(-sizeof(tmp),std::ios::cur);
+                    fp.write((char*)&tmp, sizeof(tmp));
+                    std::cout<< tmp.dfname << " added to "<< CurrentDir << "\n";
+                    success = true; 
+                    break;
+                }
+            }
+            if (!success){
+                std::cout<< "****Error Directory is Full****\n";
+                error = true;
+            }
+            
+            //update directory size data in inode
+            fp.seekg(0);
+            success = false;
+            while(fp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (fp.tellg() < FileSpacePTR))
+            {
+                if(ctrlnodes.id == CurrentDirID){
+                    indexnode tmp2 = ctrlnodes;
+                    fp.seekp(-sizeof(tmp2),std::ios::cur);
+                    tmp2.size = CurrentDirSize + sizeof(templatdr);
+                    fp.write((char*)&tmp2, sizeof(tmp2));
+                    success = true; 
+                    break;
+                }
+            }
+            if (!success){
+                std::cout<< "****Error: Directory size data could not be updated****\n";
+                error = true;
+            }
+            //update source inode linkcount
+            fp.seekg(0);
+            success = false;
+            while(fp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (fp.tellg() < FileSpacePTR))
+            {
+                if(ctrlnodes.id == SrcFileID){
+                    indexnode tmp3 = ctrlnodes;
+                    std::cout<< "Source ID#: "<< tmp3.id<< "\n";
+                    fp.seekp(-sizeof(tmp3),std::ios::cur);
+                    std::cout<< "Previous Link Count: "<< tmp3.linkcount<< "\n";
+                    tmp3.linkcount++;
+                    std::cout<< "New Link Count: "<< tmp3.linkcount<< "\n";
+                    fp.write((char*)&tmp3, sizeof(tmp3));
+                    success = true; 
+                    break;
+                }
+            }
+            if (!success){
+                std::cout<< "****Error: Link Count data could not be updated****\n";
+                error = true;
+            }
+        }
+        if (error){
+            std::cout<<"\n****Error: " << DestFile << " not added to "<< CurrentDir << " ****\n";
+            error = true;
+        }
+    }else {
+        std::cout<<"****Error Accessing File System Disk****\n";
+    } 
+    std::cout<<"\n";
 }
 
 void Commands::unlink(std::string name){
@@ -1813,7 +1960,11 @@ void Commands::stat(std::string name){
                     if(templatdr.dir == 1){
                         std::cout<< "\nDirectory\n";
                     }else{
-                        std::cout<< "\nFile\n";
+                        if(templatdr.dir == 2){
+                            std::cout<< "\nLink\n";
+                        }else{
+                            std::cout<< "\nFile\n";
+                        }
                     }
                     
                     //find inode for desired item
@@ -1853,7 +2004,11 @@ void Commands::stat(std::string name){
                         if(templatdr.dir == 1){
                             std::cout<< "\nDirectory\n";
                         }else{
-                            std::cout<< "\nFile\n";
+                            if(templatdr.dir == 2){
+                                std::cout<< "\nLink\n";
+                            }else{
+                                std::cout<< "\nFile\n";
+                            }
                         }
                         //find inode for desired item
                         ifp.seekg(0);
@@ -1893,7 +2048,11 @@ void Commands::stat(std::string name){
                         if(templatdr.dir == 1){
                             std::cout<< "\nDirectory\n";
                         }else{
-                            std::cout<< "\nFile\n";
+                            if(templatdr.dir == 2){
+                                std::cout<< "\nLink\n";
+                            }else{
+                                std::cout<< "\nFile\n";
+                            }
                         }
                         //find inode for desired item
                         ifp.seekg(0);
@@ -1932,7 +2091,11 @@ void Commands::stat(std::string name){
                         if(templatdr.dir == 1){
                             std::cout<< "\nDirectory\n";
                         }else{
-                            std::cout<< "\nFile\n";
+                            if(templatdr.dir == 2){
+                                std::cout<< "\nLink\n";
+                            }else{
+                                std::cout<< "\nFile\n";
+                            }
                         }
                         //find inode for desired item
                         ifp.seekg(0);
@@ -1971,7 +2134,11 @@ void Commands::stat(std::string name){
                         if(templatdr.dir == 1){
                             std::cout<< "\nDirectory\n";
                         }else{
-                            std::cout<< "\nFile\n";
+                            if(templatdr.dir == 2){
+                                std::cout<< "\nLink\n";
+                            }else{
+                                std::cout<< "\nFile\n";
+                            }
                         }
                         //find inode for desired item
                         ifp.seekg(0);
@@ -2010,7 +2177,11 @@ void Commands::stat(std::string name){
                         if(templatdr.dir == 1){
                             std::cout<< "\nDirectory\n";
                         }else{
-                            std::cout<< "\nFile\n";
+                            if(templatdr.dir == 2){
+                                std::cout<< "\nLink\n";
+                            }else{
+                                std::cout<< "\nFile\n";
+                            }
                         }
                         //find inode for desired item
                         ifp.seekg(0);
@@ -2049,7 +2220,11 @@ void Commands::stat(std::string name){
                         if(templatdr.dir == 1){
                             std::cout<< "\nDirectory\n";
                         }else{
-                            std::cout<< "\nFile\n";
+                            if(templatdr.dir == 2){
+                                std::cout<< "\nLink\n";
+                            }else{
+                                std::cout<< "\nFile\n";
+                            }
                         }
                         //find inode for desired item
                         ifp.seekg(0);
@@ -2088,7 +2263,11 @@ void Commands::stat(std::string name){
                         if(templatdr.dir == 1){
                             std::cout<< "\nDirectory\n";
                         }else{
-                            std::cout<< "\nFile\n";
+                            if(templatdr.dir == 2){
+                                std::cout<< "\nLink\n";
+                            }else{
+                                std::cout<< "\nFile\n";
+                            }
                         }
                         //find inode for desired item
                         ifp.seekg(0);
@@ -2127,7 +2306,11 @@ void Commands::stat(std::string name){
                         if(templatdr.dir == 1){
                             std::cout<< "\nDirectory\n";
                         }else{
-                            std::cout<< "\nFile\n";
+                            if(templatdr.dir == 2){
+                                std::cout<< "\nLink\n";
+                            }else{
+                                std::cout<< "\nFile\n";
+                            }
                         }
                         //find inode for desired item
                         ifp.seekg(0);
@@ -2166,7 +2349,11 @@ void Commands::stat(std::string name){
                         if(templatdr.dir == 1){
                             std::cout<< "\nDirectory\n";
                         }else{
-                            std::cout<< "\nFile\n";
+                            if(templatdr.dir == 2){
+                                std::cout<< "\nLink\n";
+                            }else{
+                                std::cout<< "\nFile\n";
+                            }
                         }
                         //find inode for desired item
                         ifp.seekg(0);
@@ -2283,7 +2470,11 @@ void Commands::ls(){
                     if(templatdr.dir == 1){
                         std::cout<< "Directory: "<< templatdr.dfname << "\n";
                     }else {
-                        std::cout<< "File: "<< templatdr.dfname << "\n";
+                        if(templatdr.dir == 2){
+                            std::cout<< "Link: "<< templatdr.dfname << "\n";
+                        }else{
+                            std::cout<< "File: "<< templatdr.dfname << "\n";
+                        }
                     }
                 }
             }
@@ -2297,7 +2488,11 @@ void Commands::ls(){
                         if(templatdr.dir == 1){
                             std::cout<< "Directory: "<< templatdr.dfname << "\n";
                         }else {
-                            std::cout<< "File: "<< templatdr.dfname << "\n";
+                            if(templatdr.dir == 2){
+                                std::cout<< "Link: "<< templatdr.dfname << "\n";
+                            }else{
+                                std::cout<< "File: "<< templatdr.dfname << "\n";
+                            }
                         }
                     }
                 }
@@ -2312,7 +2507,11 @@ void Commands::ls(){
                         if(templatdr.dir == 1){
                             std::cout<< "Directory: "<< templatdr.dfname << "\n";
                         }else {
-                            std::cout<< "File: "<< templatdr.dfname << "\n";
+                            if(templatdr.dir == 2){
+                                std::cout<< "Link: "<< templatdr.dfname << "\n";
+                            }else{
+                                std::cout<< "File: "<< templatdr.dfname << "\n";
+                            }
                         }
                     }
                 }
@@ -2326,7 +2525,11 @@ void Commands::ls(){
                         if(templatdr.dir == 1){
                             std::cout<< "Directory: "<< templatdr.dfname << "\n";
                         }else {
-                            std::cout<< "File: "<< templatdr.dfname << "\n";
+                            if(templatdr.dir == 2){
+                                std::cout<< "Link: "<< templatdr.dfname << "\n";
+                            }else{
+                                std::cout<< "File: "<< templatdr.dfname << "\n";
+                            }
                         }
                     }
                 }
@@ -2340,7 +2543,11 @@ void Commands::ls(){
                         if(templatdr.dir == 1){
                             std::cout<< "Directory: "<< templatdr.dfname << "\n";
                         }else {
-                            std::cout<< "File: "<< templatdr.dfname << "\n";
+                            if(templatdr.dir == 2){
+                                std::cout<< "Link: "<< templatdr.dfname << "\n";
+                            }else{
+                                std::cout<< "File: "<< templatdr.dfname << "\n";
+                            }
                         }
                     }
                 }
@@ -2354,7 +2561,11 @@ void Commands::ls(){
                         if(templatdr.dir == 1){
                             std::cout<< "Directory: "<< templatdr.dfname << "\n";
                         }else {
-                            std::cout<< "File: "<< templatdr.dfname << "\n";
+                            if(templatdr.dir == 2){
+                                std::cout<< "Link: "<< templatdr.dfname << "\n";
+                            }else{
+                                std::cout<< "File: "<< templatdr.dfname << "\n";
+                            }
                         }
                     }
                 }
@@ -2368,7 +2579,11 @@ void Commands::ls(){
                         if(templatdr.dir == 1){
                             std::cout<< "Directory: "<< templatdr.dfname << "\n";
                         }else {
-                            std::cout<< "File: "<< templatdr.dfname << "\n";
+                            if(templatdr.dir == 2){
+                                std::cout<< "Link: "<< templatdr.dfname << "\n";
+                            }else{
+                                std::cout<< "File: "<< templatdr.dfname << "\n";
+                            }
                         }
                     }
                 }
@@ -2382,7 +2597,11 @@ void Commands::ls(){
                         if(templatdr.dir == 1){
                             std::cout<< "Directory: "<< templatdr.dfname << "\n";
                         }else {
-                            std::cout<< "File: "<< templatdr.dfname << "\n";
+                            if(templatdr.dir == 2){
+                                std::cout<< "Link: "<< templatdr.dfname << "\n";
+                            }else{
+                                std::cout<< "File: "<< templatdr.dfname << "\n";
+                            }
                         }
                     }
                 }
@@ -2396,7 +2615,11 @@ void Commands::ls(){
                         if(templatdr.dir == 1){
                             std::cout<< "Directory: "<< templatdr.dfname << "\n";
                         }else {
-                            std::cout<< "File: "<< templatdr.dfname << "\n";
+                            if(templatdr.dir == 2){
+                                std::cout<< "Link: "<< templatdr.dfname << "\n";
+                            }else{
+                                std::cout<< "File: "<< templatdr.dfname << "\n";
+                            }
                         }
                     }
                 }
@@ -2410,7 +2633,11 @@ void Commands::ls(){
                         if(templatdr.dir == 1){
                             std::cout<< "Directory: "<< templatdr.dfname << "\n";
                         }else {
-                            std::cout<< "File: "<< templatdr.dfname << "\n";
+                            if(templatdr.dir == 2){
+                                std::cout<< "Link: "<< templatdr.dfname << "\n";
+                            }else{
+                                std::cout<< "File: "<< templatdr.dfname << "\n";
+                            }
                         }
                     }
                 }
@@ -2420,7 +2647,7 @@ void Commands::ls(){
     }else {
         std::cout<<"****Error Accessing File System Disk****\n";
     }
-    std::cout<<"ls Complete\n\n";
+    std::cout<<"\n";
 }
 
 void Commands::cat(std::string filename){
@@ -3507,7 +3734,240 @@ void Commands::cp(std::string src, std::string dest){
 }
 
 void Commands::tree(){
-    //add code
+        
+    bool error = false;
+    directory templatdr;
+    indexnode ctrlnodes;
+    
+    //open filesystem "disk" for reading and writing
+    std::ifstream ifp ("filesystem.dat", std::ios::in|std::ios::binary);
+
+    //ensure "disk" opened correctly
+    if (ifp){
+
+        //get info of current directory
+        ifp.seekg(0);
+        bool success = false;
+        while(ifp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (ifp.tellg() < FileSpacePTR))
+        {
+            if(ctrlnodes.id == CurrentDirID){               
+                CurrentDirSize = ctrlnodes.size;
+                CurrentDirPTR = ctrlnodes.fptr_a;
+                if(CurrentDirSize > DataBlockSize){
+                    CurrentDirPTR_B = ctrlnodes.fptr_b;
+                }else{
+                    CurrentDirPTR_B = 0;
+                }
+                if(CurrentDirSize > (2 * DataBlockSize)){
+                    CurrentDirPTR_C = ctrlnodes.fptr_c;
+                }else{
+                    CurrentDirPTR_C = 0;
+                }
+                if(CurrentDirSize > (3 * DataBlockSize)){
+                    CurrentDirPTR_D = ctrlnodes.fptr_d;
+                }else{
+                    CurrentDirPTR_D = 0;
+                }
+                if(CurrentDirSize > (4 * DataBlockSize)){
+                    CurrentDirPTR_E = ctrlnodes.fptr_e;
+                }else{
+                    CurrentDirPTR_E = 0;
+                }
+                if(CurrentDirSize > (5 * DataBlockSize)){
+                    CurrentDirPTR_F = ctrlnodes.fptr_f;
+                }else{
+                    CurrentDirPTR_F = 0;
+                }
+                if(CurrentDirSize > (6 * DataBlockSize)){
+                    CurrentDirPTR_G = ctrlnodes.fptr_g;
+                }else{
+                    CurrentDirPTR_G = 0;
+                }
+                if(CurrentDirSize > (7 * DataBlockSize)){
+                    CurrentDirPTR_H = ctrlnodes.fptr_h;
+                }else{
+                    CurrentDirPTR_H = 0;
+                }
+                if(CurrentDirSize > (8 * DataBlockSize)){
+                    CurrentDirPTR_I = ctrlnodes.fptr_i;
+                }else{
+                    CurrentDirPTR_I = 0;
+                }
+                if(CurrentDirSize > (9 * DataBlockSize)){
+                    CurrentDirPTR_J = ctrlnodes.fptr_j;
+                }else{
+                    CurrentDirPTR_J = 0;
+                }
+                success = true;
+                break;
+            }
+        }
+        if (!success){
+            CurrentFileStatus = false;
+            std::cout<< "****Error inode for current directory not found****\n";
+            error = true;
+        }else{
+            //go to current directory
+            ifp.seekg(CurrentDirPTR);
+            std::cout<< "\n";
+            while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR + DataBlockSize)))
+            {
+                if (strcmp(templatdr.dfname, "")!= 0){
+                    if(templatdr.dir == 1){
+                        cd(templatdr.dfname);
+                        tree();
+                        cd("~");
+                    }else {
+                        std::cout<< templatdr.dfname;
+                        stat(templatdr.dfname);
+                    }
+                }
+            }
+
+            //go to next block of current directory, if it exists, and continue to display contents
+            if(CurrentDirPTR_B){
+                ifp.seekg(CurrentDirPTR_B);
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_B + DataBlockSize)))
+                {
+                    if(templatdr.dir == 1){
+                        cd(templatdr.dfname);
+                        tree();
+                        cd("~");
+                    }else {
+                        std::cout<< templatdr.dfname;
+                        stat(templatdr.dfname);
+                    }
+                }
+            }
+
+            //go to next block of current directory, if it exists, and continue to display contents
+            if(CurrentDirPTR_C){
+                ifp.seekg(CurrentDirPTR_C);
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_C + DataBlockSize)))
+                {
+                    if(templatdr.dir == 1){
+                        cd(templatdr.dfname);
+                        tree();
+                        cd("~");
+                    }else {
+                        std::cout<< templatdr.dfname;
+                        stat(templatdr.dfname);
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, and continue to display contents
+            if(CurrentDirPTR_D){
+                ifp.seekg(CurrentDirPTR_D);
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_D + DataBlockSize)))
+                {
+                    if(templatdr.dir == 1){
+                        cd(templatdr.dfname);
+                        tree();
+                        cd("~");
+                    }else {
+                        std::cout<< templatdr.dfname;
+                        stat(templatdr.dfname);
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, and continue to display contents
+            if(CurrentDirPTR_E){
+                ifp.seekg(CurrentDirPTR_E);
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_E + DataBlockSize)))
+                {
+                    if(templatdr.dir == 1){
+                        cd(templatdr.dfname);
+                        tree();
+                        cd("~");
+                    }else {
+                        std::cout<< templatdr.dfname;
+                        stat(templatdr.dfname);
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, and continue to display contents
+            if(CurrentDirPTR_F){
+                ifp.seekg(CurrentDirPTR_F);
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_F + DataBlockSize)))
+                {
+                    if(templatdr.dir == 1){
+                        cd(templatdr.dfname);
+                        tree();
+                        cd("~");
+                    }else {
+                        std::cout<< templatdr.dfname;
+                        stat(templatdr.dfname);
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, and continue to display contents
+            if(CurrentDirPTR_G){
+                ifp.seekg(CurrentDirPTR_G);
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_G + DataBlockSize)))
+                {
+                    if(templatdr.dir == 1){
+                        cd(templatdr.dfname);
+                        tree();
+                        cd("~");
+                    }else {
+                        std::cout<< templatdr.dfname;
+                        stat(templatdr.dfname);
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, and continue to display contents
+            if(CurrentDirPTR_H){
+                ifp.seekg(CurrentDirPTR_H);
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_H + DataBlockSize)))
+                {
+                    if(templatdr.dir == 1){
+                        cd(templatdr.dfname);
+                        tree();
+                        cd("~");
+                    }else {
+                        std::cout<< templatdr.dfname;
+                        stat(templatdr.dfname);
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, and continue to display contents
+            if(CurrentDirPTR_I){
+                ifp.seekg(CurrentDirPTR_I);
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_I + DataBlockSize)))
+                {
+                    if(templatdr.dir == 1){
+                        std::cout<< "Directory: "<< templatdr.dfname << "\n";
+                        cd(templatdr.dfname);
+                        tree();
+                        cd("~");
+                    }else {
+                        std::cout<< templatdr.dfname;
+                        stat(templatdr.dfname);
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, and continue to display contents
+            if(CurrentDirPTR_J){
+                ifp.seekg(CurrentDirPTR_J);
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_J + DataBlockSize)))
+                {
+                    if(templatdr.dir == 1){
+                        std::cout<< "Directory: "<< templatdr.dfname << "\n";
+                        cd(templatdr.dfname);
+                        tree();
+                        cd("~");
+                    }else {
+                        std::cout<< templatdr.dfname;
+                        stat(templatdr.dfname);
+                    }
+                }
+            }
+        }
+        
+    }else {
+        std::cout<<"****Error Accessing File System Disk****\n";
+    }
+    std::cout<<"\n";
 }
 
 void Commands::import(std::string src, std::string dest){
@@ -4120,7 +4580,7 @@ int Commands::GetNextDataBlock(){
             std::cout<< "****Error File System Disk is Full****\n";
             return 0;
         }else {
-            std::cout<< "The next available file block is: "<< datablock << "\n";
+ //           std::cout<< "The next available file block is: "<< datablock << "\n";
             return datablock;
         }
     }else{
@@ -5101,5 +5561,260 @@ int Commands::SrcToDest(std::string dest){
             std::cout<<"****Error File I/O Issue****\n\n";
             return 0;
         }
+    }
+}
+
+int Commands::GetSrcInfo(){
+    
+    indexnode ctrlnodes;
+    bool success = false;
+    
+    //open filesystem "disk" for reading
+    std::ifstream ifp ("filesystem.dat", std::ios::in | std::ios::binary);
+    
+    if(ifp){
+
+        //get info of current directory
+        ifp.seekg(0);
+        bool success = false;
+        while(ifp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (ifp.tellg() < FileSpacePTR))
+        {
+            if(ctrlnodes.id == SrcFileID){               
+                SrcFileSize = ctrlnodes.size;
+                SrcFilePTR = ctrlnodes.fptr_a;
+                if(SrcFileSize > DataBlockSize){
+                    SrcFilePTR_B = ctrlnodes.fptr_b;
+                }else{
+                    SrcFilePTR_B = 0;
+                }
+                if(SrcFileSize > (2 * DataBlockSize)){
+                    SrcFilePTR_C = ctrlnodes.fptr_c;
+                }else{
+                    SrcFilePTR_C = 0;
+                }
+                if(SrcFileSize > (3 * DataBlockSize)){
+                    SrcFilePTR_D = ctrlnodes.fptr_d;
+                }else{
+                    SrcFilePTR_D = 0;
+                }
+                if(SrcFileSize > (4 * DataBlockSize)){
+                    SrcFilePTR_E = ctrlnodes.fptr_e;
+                }else{
+                    SrcFilePTR_E = 0;
+                }
+                if(SrcFileSize > (5 * DataBlockSize)){
+                    SrcFilePTR_F = ctrlnodes.fptr_f;
+                }else{
+                    SrcFilePTR_F = 0;
+                }
+                if(SrcFileSize > (6 * DataBlockSize)){
+                    SrcFilePTR_G = ctrlnodes.fptr_g;
+                }else{
+                    SrcFilePTR_G = 0;
+                }
+                if(SrcFileSize > (7 * DataBlockSize)){
+                    SrcFilePTR_H = ctrlnodes.fptr_h;
+                }else{
+                    SrcFilePTR_H = 0;
+                }
+                if(SrcFileSize > (8 * DataBlockSize)){
+                    SrcFilePTR_I = ctrlnodes.fptr_i;
+                }else{
+                    SrcFilePTR_I = 0;
+                }
+                if(SrcFileSize > (9 * DataBlockSize)){
+                    SrcFilePTR_J = ctrlnodes.fptr_j;
+                }else{
+                    SrcFilePTR_J = 0;
+                }
+                success = true;
+                break;
+            }
+        }
+        if(success){
+            return 1;
+        }else{
+            return 0;
+        }
+        
+    }else{
+        std::cout<<"****Error Accessing File System Disk****\n";
+        return 0;
+    }
+}
+
+int Commands::SearchForSrcName(std::string src){
+    
+    //Searches directory set by source ID # to be current source for desired name
+    indexnode ctrlnodes;
+    directory templatdr;
+    bool error = false;
+    bool success = false;
+    strcpy(SrcFile, src.c_str());
+    
+    //open disk
+    std::fstream ifp("filesystem.dat", std::ios::in|std::ios::binary);
+    
+    //ensure "disk" opened correctly
+    if (ifp){
+        
+        //get info of source directory
+        int status = GetSrcInfo();
+        if (!status){
+            std::cout<< "****Error: information for source not found****\n";
+            error = true;
+        }
+        
+        if(!error){
+            
+            //go to source directory
+            ifp.seekg(SrcFilePTR);
+
+            //Search for desired name
+            while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (SrcFilePTR + DataBlockSize)) && !error)
+            {
+                if(strcmp(templatdr.dfname, SrcFile)== 0){
+                    SrcFileID = templatdr.dfid;
+                    success = true; 
+                    break;
+                }
+            }
+            
+            //go to next block of current directory, if it exists, to continue the search
+            if(SrcFilePTR_B && !success && !error){
+                ifp.seekg(SrcFilePTR_B);
+
+                //Search for desired name
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (SrcFilePTR_B + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, SrcFile)== 0){
+                        SrcFileID = templatdr.dfid;
+                        success = true; 
+                        break;
+                    }
+                }
+            }
+            
+            //go to next block of current directory, if it exists, to continue the search           
+            if(SrcFilePTR_C && !success && !error){
+                ifp.seekg(SrcFilePTR_C);
+
+                //Search for desired name
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (SrcFilePTR_C + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, SrcFile)== 0){
+                        SrcFileID = templatdr.dfid;
+                        success = true; 
+                        break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(SrcFilePTR_D && !success && !error){
+                ifp.seekg(SrcFilePTR_D);
+
+                //Search for desired name
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (SrcFilePTR_D + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, SrcFile)== 0){
+                        SrcFileID = templatdr.dfid;
+                        success = true; 
+                        break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(SrcFilePTR_E && !success && !error){
+                ifp.seekg(SrcFilePTR_E);
+
+                //Search for desired name
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (SrcFilePTR_E + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, SrcFile)== 0){
+                        SrcFileID = templatdr.dfid;
+                        success = true; 
+                        break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(SrcFilePTR_F && !success && !error){
+                ifp.seekg(SrcFilePTR_F);
+
+                //Search for desired name
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (SrcFilePTR_F + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, SrcFile)== 0){
+                        SrcFileID = templatdr.dfid;
+                        success = true; 
+                        break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(SrcFilePTR_G && !success && !error){
+                ifp.seekg(SrcFilePTR_G);
+
+                //Search for desired name
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (SrcFilePTR_G + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, SrcFile)== 0){
+                        SrcFileID = templatdr.dfid;
+                        success = true; 
+                        break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(SrcFilePTR_H && !success && !error){
+                ifp.seekg(SrcFilePTR_H);
+
+                //Search for desired name
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (SrcFilePTR_H + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, SrcFile)== 0){
+                        SrcFileID = templatdr.dfid;
+                        success = true; 
+                        break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(SrcFilePTR_I && !success && !error){
+                ifp.seekg(SrcFilePTR_I);
+
+                //Search for desired name
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (SrcFilePTR_I + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, SrcFile)== 0){
+                        SrcFileID = templatdr.dfid;
+                        success = true; 
+                        break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(SrcFilePTR_J && !success && !error){
+                ifp.seekg(SrcFilePTR_J);
+
+                //Search for desired name
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (SrcFilePTR_J + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, SrcFile)== 0){
+                        SrcFileID = templatdr.dfid;
+                        success = true; 
+                        break;
+                    }
+                }
+            }
+        }
+        if(success){
+            return 1;
+        }else{
+            return 0;
+        }
+    }else{
+        std::cout<<"****Error Accessing File System Disk****\n\n";
+        return 0;
     }
 }

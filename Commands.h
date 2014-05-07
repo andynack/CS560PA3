@@ -42,6 +42,8 @@ private:
     int ReadSrcFile();
     int ExportSrcFile(std::string dest);
     int SrcToDest(std::string dest);
+    int GetSrcInfo();
+    int SearchForSrcName(std::string name);
 };
 
 #endif	/* COMMANDS_H */
