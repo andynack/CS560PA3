@@ -133,4 +133,6 @@ int DestFilePTR_H; //8th Pointer for destination file
 int DestFilePTR_I; //9th Pointer for destination file
 int DestFilePTR_J; //10th Pointer for destination file
 
+//char Buff[];
+
 #endif	/* INDEX_H */

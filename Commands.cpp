@@ -75,7 +75,8 @@ void Commands::mkfs() {
     }
 }
 
-void Commands::open(std::string filename, std::string fg){
+int Commands::open(std::string filename, std::string fg){
+    bool error = false;
     if (CurrentFileStatus){
         std::cout<<"File "<<CurrentFile<<" has already been opened. Only one file may be opened at a time.\n";
     }else {
@@ -455,7 +456,12 @@ void Commands::open(std::string filename, std::string fg){
             std::cout<<"****Error Accessing File System Disk****\n";
         }
     }    
-    std::cout<<"open Complete\n\n";
+    std::cout<<"\n";
+    if (!error){
+        return CurrentFileFD;
+    }else{
+        return -1;
+    }
 }
 
 void Commands::read(int fd, int size){
@@ -788,82 +794,82 @@ void Commands::write(int fd, std::string str){
                 }
                 if(!error){
                     //write string to file
-                    int t= 1;
-                    if((CurrentFileOffset < DataBlockSize) && (t < (len-1))){
+                    int t= 0;
+                    if((CurrentFileOffset < DataBlockSize) && (t < (len))){
                         fp.seekp(CurrentFilePTR + CurrentFileOffset);
-                        while((CurrentFileOffset < DataBlockSize) && (t < (len-1))){
+                        while((CurrentFileOffset < DataBlockSize) && (t < (len))){
                             fp.write((char*)&buffer[t],sizeof(buffer[t]));
                             t++;
                             CurrentFileOffset++;
                         }
                     }
-                    if((CurrentFileOffset > DataBlockSize) && (CurrentFileOffset < (2 * DataBlockSize)) && (t < (len-1))){
+                    if((CurrentFileOffset > DataBlockSize) && (CurrentFileOffset < (2 * DataBlockSize)) && (t < (len))){
                         fp.seekp(CurrentFilePTR_B + CurrentFileOffset - DataBlockSize);
-                        while((CurrentFileOffset > DataBlockSize) && (CurrentFileOffset < (2 * DataBlockSize)) && (t < (len-1))){
+                        while((CurrentFileOffset > DataBlockSize) && (CurrentFileOffset < (2 * DataBlockSize)) && (t < (len))){
                             fp.write((char*)&buffer[t],sizeof(buffer[t]));
                             t++;
                             CurrentFileOffset++;
                         }
                     }
-                    if((CurrentFileOffset > (2 * DataBlockSize)) && (CurrentFileOffset < (3 * DataBlockSize)) && (t < (len-1))){
+                    if((CurrentFileOffset > (2 * DataBlockSize)) && (CurrentFileOffset < (3 * DataBlockSize)) && (t < (len))){
                         fp.seekp(CurrentFilePTR_C + CurrentFileOffset - (2 * DataBlockSize));
-                        while((CurrentFileOffset > (2 * DataBlockSize)) && (CurrentFileOffset < (3 * DataBlockSize)) && (t < (len-1))){
+                        while((CurrentFileOffset > (2 * DataBlockSize)) && (CurrentFileOffset < (3 * DataBlockSize)) && (t < (len))){
                             fp.write((char*)&buffer[t],sizeof(buffer[t]));
                             t++;
                             CurrentFileOffset++;
                         }
                     }
-                    if((CurrentFileOffset > (3 * DataBlockSize)) && (CurrentFileOffset < (4 * DataBlockSize)) && (t < (len-1))){
+                    if((CurrentFileOffset > (3 * DataBlockSize)) && (CurrentFileOffset < (4 * DataBlockSize)) && (t < (len))){
                         fp.seekp(CurrentFilePTR_D + CurrentFileOffset - (3 * DataBlockSize));
-                        while((CurrentFileOffset > (3 * DataBlockSize)) && (CurrentFileOffset < (4 * DataBlockSize)) && (t < (len-1))){
+                        while((CurrentFileOffset > (3 * DataBlockSize)) && (CurrentFileOffset < (4 * DataBlockSize)) && (t < (len))){
                             fp.write((char*)&buffer[t],sizeof(buffer[t]));
                             t++;
                             CurrentFileOffset++;
                         }
                     }
-                    if((CurrentFileOffset > (4 * DataBlockSize)) && (CurrentFileOffset < (5 * DataBlockSize)) && (t < (len-1))){
+                    if((CurrentFileOffset > (4 * DataBlockSize)) && (CurrentFileOffset < (5 * DataBlockSize)) && (t < (len))){
                         fp.seekp(CurrentFilePTR_E + CurrentFileOffset - (4 * DataBlockSize));
-                        while((CurrentFileOffset > (4 * DataBlockSize)) && (CurrentFileOffset < (5 * DataBlockSize)) && (t < (len-1))){
+                        while((CurrentFileOffset > (4 * DataBlockSize)) && (CurrentFileOffset < (5 * DataBlockSize)) && (t < (len))){
                             fp.write((char*)&buffer[t],sizeof(buffer[t]));
                             t++;
                             CurrentFileOffset++;
                         }
                     }
-                    if((CurrentFileOffset > (5 * DataBlockSize)) && (CurrentFileOffset < (6 * DataBlockSize)) && (t < (len-1))){
+                    if((CurrentFileOffset > (5 * DataBlockSize)) && (CurrentFileOffset < (6 * DataBlockSize)) && (t < (len))){
                         fp.seekp(CurrentFilePTR_F + CurrentFileOffset - (5 * DataBlockSize));
-                        while((CurrentFileOffset > (5 * DataBlockSize)) && (CurrentFileOffset < (6 * DataBlockSize)) && (t < (len-1))){
+                        while((CurrentFileOffset > (5 * DataBlockSize)) && (CurrentFileOffset < (6 * DataBlockSize)) && (t < (len))){
                             fp.write((char*)&buffer[t],sizeof(buffer[t]));
                             t++;
                             CurrentFileOffset++;
                         }
                     }
-                    if((CurrentFileOffset > (6 * DataBlockSize)) && (CurrentFileOffset < (7 * DataBlockSize)) && (t < (len-1))){
+                    if((CurrentFileOffset > (6 * DataBlockSize)) && (CurrentFileOffset < (7 * DataBlockSize)) && (t < (len))){
                         fp.seekp(CurrentFilePTR_G + CurrentFileOffset - (6 * DataBlockSize));
-                        while((CurrentFileOffset > (6 * DataBlockSize)) && (CurrentFileOffset < (7 * DataBlockSize)) && (t < (len-1))){
+                        while((CurrentFileOffset > (6 * DataBlockSize)) && (CurrentFileOffset < (7 * DataBlockSize)) && (t < (len))){
                             fp.write((char*)&buffer[t],sizeof(buffer[t]));
                             t++;
                             CurrentFileOffset++;
                         }
                     }
-                    if((CurrentFileOffset > (7 * DataBlockSize)) && (CurrentFileOffset < (8 * DataBlockSize)) && (t < (len-1))){
+                    if((CurrentFileOffset > (7 * DataBlockSize)) && (CurrentFileOffset < (8 * DataBlockSize)) && (t < (len))){
                         fp.seekp(CurrentFilePTR_H + CurrentFileOffset - (7 * DataBlockSize));
-                        while((CurrentFileOffset > (7 * DataBlockSize)) && (CurrentFileOffset < (8 * DataBlockSize)) && (t < (len-1))){
+                        while((CurrentFileOffset > (7 * DataBlockSize)) && (CurrentFileOffset < (8 * DataBlockSize)) && (t < (len))){
                             fp.write((char*)&buffer[t],sizeof(buffer[t]));
                             t++;
                             CurrentFileOffset++;
                         }
                     }
-                    if((CurrentFileOffset > (8 * DataBlockSize)) && (CurrentFileOffset < (9 * DataBlockSize)) && (t < (len-1))){
+                    if((CurrentFileOffset > (8 * DataBlockSize)) && (CurrentFileOffset < (9 * DataBlockSize)) && (t < (len))){
                         fp.seekp(CurrentFilePTR_I + CurrentFileOffset - (8 * DataBlockSize));
-                        while((CurrentFileOffset > (8 * DataBlockSize)) && (CurrentFileOffset < (9 * DataBlockSize)) && (t < (len-1))){
+                        while((CurrentFileOffset > (8 * DataBlockSize)) && (CurrentFileOffset < (9 * DataBlockSize)) && (t < (len))){
                             fp.write((char*)&buffer[t],sizeof(buffer[t]));
                             t++;
                             CurrentFileOffset++;
                         }
                     }
-                    if((CurrentFileOffset > (9 * DataBlockSize)) && (CurrentFileOffset < (10 * DataBlockSize)) && (t < (len-1))){
+                    if((CurrentFileOffset > (9 * DataBlockSize)) && (CurrentFileOffset < (10 * DataBlockSize)) && (t < (len))){
                         fp.seekp(CurrentFilePTR_J + CurrentFileOffset - (9 * DataBlockSize));
-                        while((CurrentFileOffset > (9 * DataBlockSize)) && (CurrentFileOffset < (10 * DataBlockSize)) && (t < (len-1))){
+                        while((CurrentFileOffset > (9 * DataBlockSize)) && (CurrentFileOffset < (10 * DataBlockSize)) && (t < (len))){
                             fp.write((char*)&buffer[t],sizeof(buffer[t]));
                             t++;
                             CurrentFileOffset++;
@@ -1127,6 +1133,7 @@ void Commands::rmdir(std::string dirname){
                         fp.seekp(-sizeof(tmp),std::ios::cur);
                         fp.write((char*)&tmp, sizeof(tmp));
                         std::cout<<"Directory "<< deldirname << " removed from "<< CurrentDir << "\n\n";
+                        CurrentDirSize -= sizeof(templatdr);
                         success = true; 
                         break;
                     }else {
@@ -1152,6 +1159,7 @@ void Commands::rmdir(std::string dirname){
                             fp.seekp(-sizeof(tmp),std::ios::cur);
                             fp.write((char*)&tmp, sizeof(tmp));
                             std::cout<<"Directory "<< deldirname << " removed from "<< CurrentDir << "\n\n";
+                            CurrentDirSize -= sizeof(templatdr);
                             success = true; 
                             break;
                         }else {
@@ -1178,6 +1186,7 @@ void Commands::rmdir(std::string dirname){
                             fp.seekp(-sizeof(tmp),std::ios::cur);
                             fp.write((char*)&tmp, sizeof(tmp));
                             std::cout<<"Directory "<< deldirname << " removed from "<< CurrentDir << "\n\n";
+                            CurrentDirSize -= sizeof(templatdr);
                             success = true; 
                             break;
                         }else {
@@ -1203,6 +1212,7 @@ void Commands::rmdir(std::string dirname){
                             fp.seekp(-sizeof(tmp),std::ios::cur);
                             fp.write((char*)&tmp, sizeof(tmp));
                             std::cout<<"Directory "<< deldirname << " removed from "<< CurrentDir << "\n\n";
+                            CurrentDirSize -= sizeof(templatdr);
                             success = true; 
                             break;
                         }else {
@@ -1228,6 +1238,7 @@ void Commands::rmdir(std::string dirname){
                             fp.seekp(-sizeof(tmp),std::ios::cur);
                             fp.write((char*)&tmp, sizeof(tmp));
                             std::cout<<"Directory "<< deldirname << " removed from "<< CurrentDir << "\n\n";
+                            CurrentDirSize -= sizeof(templatdr);
                             success = true; 
                             break;
                         }else {
@@ -1253,6 +1264,7 @@ void Commands::rmdir(std::string dirname){
                             fp.seekp(-sizeof(tmp),std::ios::cur);
                             fp.write((char*)&tmp, sizeof(tmp));
                             std::cout<<"Directory "<< deldirname << " removed from "<< CurrentDir << "\n\n";
+                            CurrentDirSize -= sizeof(templatdr);
                             success = true; 
                             break;
                         }else {
@@ -1278,6 +1290,7 @@ void Commands::rmdir(std::string dirname){
                             fp.seekp(-sizeof(tmp),std::ios::cur);
                             fp.write((char*)&tmp, sizeof(tmp));
                             std::cout<<"Directory "<< deldirname << " removed from "<< CurrentDir << "\n\n";
+                            CurrentDirSize -= sizeof(templatdr);
                             success = true; 
                             break;
                         }else {
@@ -1303,6 +1316,7 @@ void Commands::rmdir(std::string dirname){
                             fp.seekp(-sizeof(tmp),std::ios::cur);
                             fp.write((char*)&tmp, sizeof(tmp));
                             std::cout<<"Directory "<< deldirname << " removed from "<< CurrentDir << "\n\n";
+                            CurrentDirSize -= sizeof(templatdr);
                             success = true; 
                             break;
                         }else {
@@ -1328,6 +1342,7 @@ void Commands::rmdir(std::string dirname){
                             fp.seekp(-sizeof(tmp),std::ios::cur);
                             fp.write((char*)&tmp, sizeof(tmp));
                             std::cout<<"Directory "<< deldirname << " removed from "<< CurrentDir << "\n\n";
+                            CurrentDirSize -= sizeof(templatdr);
                             success = true; 
                             break;
                         }else {
@@ -1353,6 +1368,7 @@ void Commands::rmdir(std::string dirname){
                             fp.seekp(-sizeof(tmp),std::ios::cur);
                             fp.write((char*)&tmp, sizeof(tmp));
                             std::cout<<"Directory "<< deldirname << " removed from "<< CurrentDir << "\n\n";
+                            CurrentDirSize -= sizeof(templatdr);
                             success = true; 
                             break;
                         }else {
@@ -1468,7 +1484,295 @@ void Commands::link(std::string src, std::string dest){
 }
 
 void Commands::unlink(std::string name){
-    //add code
+    
+    indexnode ctrlnodes;
+    directory templatdr;
+    bool error = false;
+    bool success = false;
+    char linkname[20];
+    int linkID;
+    
+    //open disk
+    std::fstream fp("filesystem.dat", std::ios::in|std::ios::out|std::ios::binary);
+    
+    //ensure "disk" opened correctly
+    if (fp){
+        
+        //get info of current directory
+        int status = GetCurDirInfo();
+        if (!status){
+            CurrentFileStatus = false;
+            std::cout<< "****Error inode for current directory not found****\n";
+            error = true;
+        }
+        
+        if(!error){
+            //convert inputed name to char array
+            strcpy(linkname, name.c_str());
+            
+            //go to current directory
+            fp.seekg(CurrentDirPTR);
+
+            //Search for link to be deleted
+            while(fp.read((char*)&templatdr, sizeof(templatdr)) && (fp.tellg()< (CurrentDirPTR + DataBlockSize)))
+            {
+                if(strcmp(templatdr.dfname, linkname)== 0){
+                    directory tmp = templatdr;
+                    linkID = tmp.dfid;
+                    strcpy(tmp.dfname, "");
+                    tmp.dfid = 0;
+                    fp.seekp(-sizeof(tmp),std::ios::cur);
+                    fp.write((char*)&tmp, sizeof(tmp));
+                    std::cout<<"Link "<< linkname << " removed from "<< CurrentDir << "\n\n";
+                    CurrentDirSize -= sizeof(templatdr);
+                    success = true; 
+                    break;
+                }
+            }
+            
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_B && !success && !error){
+                fp.seekg(CurrentDirPTR_B);
+
+                //Search for link to be deleted
+                while(fp.read((char*)&templatdr, sizeof(templatdr)) && (fp.tellg()< (CurrentDirPTR_B + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, linkname)== 0){
+                        directory tmp = templatdr;
+                        linkID = tmp.dfid;
+                        strcpy(tmp.dfname, "");
+                        tmp.dfid = 0;
+                        fp.seekp(-sizeof(tmp),std::ios::cur);
+                        fp.write((char*)&tmp, sizeof(tmp));
+                        std::cout<<"Link "<< linkname << " removed from "<< CurrentDir << "\n\n";
+                        CurrentDirSize -= sizeof(templatdr);
+                        success = true; 
+                        break;
+                    }
+                }
+            }
+            
+            //go to next block of current directory, if it exists, to continue the search           
+            if(CurrentDirPTR_C && !success && !error){
+                fp.seekg(CurrentDirPTR_C);
+
+                //Search for link to be deleted
+                while(fp.read((char*)&templatdr, sizeof(templatdr)) && (fp.tellg()< (CurrentDirPTR_C + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, linkname)== 0){
+                        directory tmp = templatdr;
+                        linkID = tmp.dfid;
+                        strcpy(tmp.dfname, "");
+                        tmp.dfid = 0;
+                        fp.seekp(-sizeof(tmp),std::ios::cur);
+                        fp.write((char*)&tmp, sizeof(tmp));
+                        std::cout<<"Link "<< linkname << " removed from "<< CurrentDir << "\n\n";
+                        CurrentDirSize -= sizeof(templatdr);
+                        success = true; 
+                        break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_D && !success && !error){
+                fp.seekg(CurrentDirPTR_D);
+
+                //Search for link to be deleted
+                while(fp.read((char*)&templatdr, sizeof(templatdr)) && (fp.tellg()< (CurrentDirPTR_D + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, linkname)== 0){
+                        directory tmp = templatdr;
+                        linkID = tmp.dfid;
+                        strcpy(tmp.dfname, "");
+                        tmp.dfid = 0;
+                        fp.seekp(-sizeof(tmp),std::ios::cur);
+                        fp.write((char*)&tmp, sizeof(tmp));
+                        std::cout<<"Link "<< linkname << " removed from "<< CurrentDir << "\n\n";
+                        CurrentDirSize -= sizeof(templatdr);
+                        success = true; 
+                        break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_E && !success && !error){
+                fp.seekg(CurrentDirPTR_E);
+
+                //Search for link to be deleted
+                while(fp.read((char*)&templatdr, sizeof(templatdr)) && (fp.tellg()< (CurrentDirPTR_E + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, linkname)== 0){
+                        directory tmp = templatdr;
+                        linkID = tmp.dfid;
+                        strcpy(tmp.dfname, "");
+                        tmp.dfid = 0;
+                        fp.seekp(-sizeof(tmp),std::ios::cur);
+                        fp.write((char*)&tmp, sizeof(tmp));
+                        std::cout<<"Link "<< linkname << " removed from "<< CurrentDir << "\n\n";
+                        CurrentDirSize -= sizeof(templatdr);
+                        success = true; 
+                        break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_F && !success && !error){
+                fp.seekg(CurrentDirPTR_F);
+
+                //Search for link to be deleted
+                while(fp.read((char*)&templatdr, sizeof(templatdr)) && (fp.tellg()< (CurrentDirPTR_F + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, linkname)== 0){
+                        directory tmp = templatdr;
+                        linkID = tmp.dfid;
+                        strcpy(tmp.dfname, "");
+                        tmp.dfid = 0;
+                        fp.seekp(-sizeof(tmp),std::ios::cur);
+                        fp.write((char*)&tmp, sizeof(tmp));
+                        std::cout<<"Link "<< linkname << " removed from "<< CurrentDir << "\n\n";
+                        CurrentDirSize -= sizeof(templatdr);
+                        success = true; 
+                        break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_G && !success && !error){
+                fp.seekg(CurrentDirPTR_G);
+
+                //Search for link to be deleted
+                while(fp.read((char*)&templatdr, sizeof(templatdr)) && (fp.tellg()< (CurrentDirPTR_G + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, linkname)== 0){
+                        directory tmp = templatdr;
+                        linkID = tmp.dfid;
+                        strcpy(tmp.dfname, "");
+                        tmp.dfid = 0;
+                        fp.seekp(-sizeof(tmp),std::ios::cur);
+                        fp.write((char*)&tmp, sizeof(tmp));
+                        std::cout<<"Link "<< linkname << " removed from "<< CurrentDir << "\n\n";
+                        CurrentDirSize -= sizeof(templatdr);
+                        success = true; 
+                        break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_H && !success && !error){
+                fp.seekg(CurrentDirPTR_H);
+
+                //Search for link to be deleted
+                while(fp.read((char*)&templatdr, sizeof(templatdr)) && (fp.tellg()< (CurrentDirPTR_H + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, linkname)== 0){
+                        directory tmp = templatdr;
+                        linkID = tmp.dfid;
+                        strcpy(tmp.dfname, "");
+                        tmp.dfid = 0;
+                        fp.seekp(-sizeof(tmp),std::ios::cur);
+                        fp.write((char*)&tmp, sizeof(tmp));
+                        std::cout<<"Link "<< linkname << " removed from "<< CurrentDir << "\n\n";
+                        CurrentDirSize -= sizeof(templatdr);
+                        success = true; 
+                        break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_I && !success && !error){
+                fp.seekg(CurrentDirPTR_I);
+
+                //Search for link to be deleted
+                while(fp.read((char*)&templatdr, sizeof(templatdr)) && (fp.tellg()< (CurrentDirPTR_I + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, linkname)== 0){
+                        directory tmp = templatdr;
+                        linkID = tmp.dfid;
+                        strcpy(tmp.dfname, "");
+                        tmp.dfid = 0;
+                        fp.seekp(-sizeof(tmp),std::ios::cur);
+                        fp.write((char*)&tmp, sizeof(tmp));
+                        std::cout<<"Link "<< linkname << " removed from "<< CurrentDir << "\n\n";
+                        CurrentDirSize -= sizeof(templatdr);
+                        success = true; 
+                        break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_J && !success && !error){
+                fp.seekg(CurrentDirPTR_J);
+
+                //Search for link to be deleted
+                while(fp.read((char*)&templatdr, sizeof(templatdr)) && (fp.tellg()< (CurrentDirPTR_J + DataBlockSize)))
+                {
+                    if(strcmp(templatdr.dfname, linkname)== 0){
+                        directory tmp = templatdr;
+                        linkID = tmp.dfid;
+                        strcpy(tmp.dfname, "");
+                        tmp.dfid = 0;
+                        fp.seekp(-sizeof(tmp),std::ios::cur);
+                        fp.write((char*)&tmp, sizeof(tmp));
+                        std::cout<<"Link "<< linkname << " removed from "<< CurrentDir << "\n\n";
+                        CurrentDirSize -= sizeof(templatdr);
+                        success = true; 
+                        break;
+                    }
+                }
+            }
+            
+            if(success){
+                //find inode of link to be updated
+                fp.seekg(0); 
+                success = false;
+                while(fp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (fp.tellg() < FileSpacePTR))
+                {
+                    if(ctrlnodes.id == linkID){               
+                        indexnode tmp = ctrlnodes;
+                        fp.seekp(-sizeof(tmp),std::ios::cur);
+
+                        //decrement linkcount
+                        tmp.linkcount -= 1;
+                        if(tmp.linkcount == 0){
+                            tmp.valid = 0;
+                            tmp.id = -1;
+                            tmp.size = 0;
+                        }
+                        fp.write((char*)&tmp, sizeof(tmp));
+                        success = true; 
+                        break;
+                    }
+                }
+                if (!success){
+                    std::cout<< "****Inode of deleted link was not found to update****\n";
+                    error = true;
+                }
+
+                if(!error){
+                    //update current directory size data in inode
+                    fp.seekg(0);
+                    success = false;
+                    while(fp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (fp.tellg() < FileSpacePTR))
+                    {
+                        if(ctrlnodes.id == CurrentDirID){
+                            indexnode tmp2 = ctrlnodes;
+                            fp.seekp(-sizeof(tmp2),std::ios::cur);
+                            tmp2.size = CurrentDirSize;
+                            fp.write((char*)&tmp2, sizeof(tmp2));
+                            success = true; 
+                            break;
+                        }
+                    }
+                    if (!success){
+                        std::cout<< "****Error: Directory size data could not be updated****\n";
+                        error = true;
+                    }
+                }
+            }
+        }
+    }else{
+        std::cout<<"****Error Accessing File System Disk****\n\n";
+    }
 }
 
 void Commands::stat(std::string name){
@@ -2189,13 +2493,12 @@ void Commands::cat(std::string filename){
                         if (!success){
                             std::cout<< "****Error inode not found for desired item****\n";
                             error = true;
-                        
-                        }else{
-                            std::cout<< "\n*****Error: This is a Directory*******\n";
-                            error = true;
                         }
-                    break;
+                    }else{
+                        std::cout<< "\n*****Error: This is a Directory*******\n";
+                        error = true;
                     }
+                break;
                 }
             }
             
@@ -2241,13 +2544,12 @@ void Commands::cat(std::string filename){
                             if (!success){
                                 std::cout<< "****Error inode not found for desired item****\n";
                                 error = true;
-
-                            }else{
-                                std::cout<< "\n*****Error: This is a Directory*******\n";
-                                error = true;
                             }
-                        break;
+                        }else{
+                            std::cout<< "\n*****Error: This is a Directory*******\n";
+                            error = true;
                         }
+                    break;
                     }
                 }
             }
@@ -2294,13 +2596,12 @@ void Commands::cat(std::string filename){
                             if (!success){
                                 std::cout<< "****Error inode not found for desired item****\n";
                                 error = true;
-
-                            }else{
-                                std::cout<< "\n*****Error: This is a Directory*******\n";
-                                error = true;
                             }
-                        break;
+                        }else{
+                            std::cout<< "\n*****Error: This is a Directory*******\n";
+                            error = true;
                         }
+                    break;
                     }
                 }
             }
@@ -2346,13 +2647,12 @@ void Commands::cat(std::string filename){
                             if (!success){
                                 std::cout<< "****Error inode not found for desired item****\n";
                                 error = true;
-
-                            }else{
-                                std::cout<< "\n*****Error: This is a Directory*******\n";
-                                error = true;
                             }
-                        break;
+                        }else{
+                            std::cout<< "\n*****Error: This is a Directory*******\n";
+                            error = true;
                         }
+                    break;
                     }
                 }
             }
@@ -2398,13 +2698,12 @@ void Commands::cat(std::string filename){
                             if (!success){
                                 std::cout<< "****Error inode not found for desired item****\n";
                                 error = true;
-
-                            }else{
-                                std::cout<< "\n*****Error: This is a Directory*******\n";
-                                error = true;
                             }
-                        break;
+                        }else{
+                            std::cout<< "\n*****Error: This is a Directory*******\n";
+                            error = true;
                         }
+                    break;
                     }
                 }
             }
@@ -2450,13 +2749,12 @@ void Commands::cat(std::string filename){
                             if (!success){
                                 std::cout<< "****Error inode not found for desired item****\n";
                                 error = true;
-
-                            }else{
-                                std::cout<< "\n*****Error: This is a Directory*******\n";
-                                error = true;
                             }
-                        break;
+                        }else{
+                            std::cout<< "\n*****Error: This is a Directory*******\n";
+                            error = true;
                         }
+                    break;
                     }
                 }
             }
@@ -2502,13 +2800,12 @@ void Commands::cat(std::string filename){
                             if (!success){
                                 std::cout<< "****Error inode not found for desired item****\n";
                                 error = true;
-
-                            }else{
-                                std::cout<< "\n*****Error: This is a Directory*******\n";
-                                error = true;
                             }
-                        break;
+                        }else{
+                            std::cout<< "\n*****Error: This is a Directory*******\n";
+                            error = true;
                         }
+                    break;
                     }
                 }
             }
@@ -2554,13 +2851,12 @@ void Commands::cat(std::string filename){
                             if (!success){
                                 std::cout<< "****Error inode not found for desired item****\n";
                                 error = true;
-
-                            }else{
-                                std::cout<< "\n*****Error: This is a Directory*******\n";
-                                error = true;
                             }
-                        break;
+                        }else{
+                            std::cout<< "\n*****Error: This is a Directory*******\n";
+                            error = true;
                         }
+                    break;
                     }
                 }
             }
@@ -2606,13 +2902,12 @@ void Commands::cat(std::string filename){
                             if (!success){
                                 std::cout<< "****Error inode not found for desired item****\n";
                                 error = true;
-
-                            }else{
-                                std::cout<< "\n*****Error: This is a Directory*******\n";
-                                error = true;
                             }
-                        break;
+                        }else{
+                            std::cout<< "\n*****Error: This is a Directory*******\n";
+                            error = true;
                         }
+                    break;
                     }
                 }
             }
@@ -2658,13 +2953,12 @@ void Commands::cat(std::string filename){
                             if (!success){
                                 std::cout<< "****Error inode not found for desired item****\n";
                                 error = true;
-
-                            }else{
-                                std::cout<< "\n*****Error: This is a Directory*******\n";
-                                error = true;
                             }
-                        break;
+                        }else{
+                            std::cout<< "\n*****Error: This is a Directory*******\n";
+                            error = true;
                         }
+                    break;
                     }
                 }
             }
@@ -2675,7 +2969,541 @@ void Commands::cat(std::string filename){
 }
 
 void Commands::cp(std::string src, std::string dest){
-    //add code
+    
+    //Search current directory for desired file name
+    indexnode ctrlnodes;
+    directory templatdr;
+    
+    bool error = false;
+    bool success = false;
+    
+    //source file name to char array
+    char sour[src.length()];
+    strcpy(sour, src.c_str());
+    //get info of source file
+    
+    //open filesystem "disk" for reading and writing
+    std::fstream ifp ("filesystem.dat", std::ios::in | std::ios::binary);
+        
+    //ensure "disk" opened correctly
+    if (ifp){
+
+        //get info of current directory
+        int status = GetCurDirInfo();
+        if (!status){
+            CurrentFileStatus = false;
+            std::cout<< "****Error information for current directory not found****\n";
+            error = true;
+        }
+
+        if(!error){
+
+            //go to current directory
+            ifp.seekg(CurrentDirPTR);
+
+            //Search for desired item
+            while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR + DataBlockSize)) && !error)
+            {
+                if(strcmp(templatdr.dfname, sour)== 0){
+                    if(templatdr.dir == 0){
+                        //find inode for desired item
+                        ifp.seekg(0);
+                        while(ifp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (ifp.tellg() < FileSpacePTR))
+                        {
+                            if(ctrlnodes.id == templatdr.dfid){
+                                SrcFileID= ctrlnodes.id; //inode id# for source file
+                                SrcFileSize= ctrlnodes.size; //Size of source file
+                                SrcFilePTR= ctrlnodes.fptr_a; //Pointer for source file
+                                SrcFilePTR_B= ctrlnodes.fptr_b; //2nd Pointer for source file
+                                SrcFilePTR_C= ctrlnodes.fptr_c; //3rd Pointer for source file
+                                SrcFilePTR_D= ctrlnodes.fptr_d; //4th Pointer for source file
+                                SrcFilePTR_E= ctrlnodes.fptr_e; //5th Pointer for source file
+                                SrcFilePTR_F= ctrlnodes.fptr_f; //6th Pointer for source file
+                                SrcFilePTR_G= ctrlnodes.fptr_g; //7th Pointer for source file
+                                SrcFilePTR_H= ctrlnodes.fptr_h; //8th Pointer for source file
+                                SrcFilePTR_I= ctrlnodes.fptr_i; //9th Pointer for source file
+                                SrcFilePTR_J= ctrlnodes.fptr_j; //10th Pointer for source file
+
+                                //Export entire file contents
+                                int status = SrcToDest(dest);
+                                if (!status){
+                                    std::cout<< "****Error contents of file not exported****\n";
+                                    error = true;
+                                }else{
+                                    success = true; 
+                                }
+                                break;
+                            }
+                        }
+                        if (!success){
+                            std::cout<< "****Error inode not found for desired item****\n";
+                            error = true;
+                        }
+                    }else{
+                        std::cout<< "\n*****Error: This is a Directory*******\n";
+                        error = true;
+                    }
+                break;
+                }
+
+            }
+
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_B && !success && !error){
+                ifp.seekg(CurrentDirPTR_B);
+
+                //Search for desired file
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_B + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, sour)== 0){
+                        if(templatdr.dir == 0){
+                            //find inode for desired item
+                            ifp.seekg(0);
+                            while(ifp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (ifp.tellg() < FileSpacePTR))
+                            {
+                                if(ctrlnodes.id == templatdr.dfid){
+                                    SrcFileID= ctrlnodes.id; //inode id# for source file
+                                    SrcFileSize= ctrlnodes.size; //Size of source file
+                                    SrcFilePTR= ctrlnodes.fptr_a; //Pointer for source file
+                                    SrcFilePTR_B= ctrlnodes.fptr_b; //2nd Pointer for source file
+                                    SrcFilePTR_C= ctrlnodes.fptr_c; //3rd Pointer for source file
+                                    SrcFilePTR_D= ctrlnodes.fptr_d; //4th Pointer for source file
+                                    SrcFilePTR_E= ctrlnodes.fptr_e; //5th Pointer for source file
+                                    SrcFilePTR_F= ctrlnodes.fptr_f; //6th Pointer for source file
+                                    SrcFilePTR_G= ctrlnodes.fptr_g; //7th Pointer for source file
+                                    SrcFilePTR_H= ctrlnodes.fptr_h; //8th Pointer for source file
+                                    SrcFilePTR_I= ctrlnodes.fptr_i; //9th Pointer for source file
+                                    SrcFilePTR_J= ctrlnodes.fptr_j; //10th Pointer for source file
+
+                                    //Export entire file contents
+                                    int status = SrcToDest(dest);
+                                    if (!status){
+                                        std::cout<< "****Error contents of file not exported****\n";
+                                        error = true;
+                                    }else{
+                                        success = true; 
+                                    }
+                                    break;
+                                }
+                            }
+                            if (!success){
+                                std::cout<< "****Error inode not found for desired item****\n";
+                                error = true;
+                            }
+                        }else{
+                            std::cout<< "\n*****Error: This is a Directory*******\n";
+                            error = true;
+                        }
+                    break;
+                    }
+
+                }
+            }
+
+            //go to next block of current directory, if it exists, to continue the search           
+            if(CurrentDirPTR_C && !success && !error){
+                ifp.seekg(CurrentDirPTR_C);
+
+                //Search for desired file
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_C + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, sour)== 0){
+                        if(templatdr.dir == 0){
+                            //find inode for desired item
+                            ifp.seekg(0);
+                            while(ifp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (ifp.tellg() < FileSpacePTR))
+                            {
+                                if(ctrlnodes.id == templatdr.dfid){
+                                    SrcFileID= ctrlnodes.id; //inode id# for source file
+                                    SrcFileSize= ctrlnodes.size; //Size of source file
+                                    SrcFilePTR= ctrlnodes.fptr_a; //Pointer for source file
+                                    SrcFilePTR_B= ctrlnodes.fptr_b; //2nd Pointer for source file
+                                    SrcFilePTR_C= ctrlnodes.fptr_c; //3rd Pointer for source file
+                                    SrcFilePTR_D= ctrlnodes.fptr_d; //4th Pointer for source file
+                                    SrcFilePTR_E= ctrlnodes.fptr_e; //5th Pointer for source file
+                                    SrcFilePTR_F= ctrlnodes.fptr_f; //6th Pointer for source file
+                                    SrcFilePTR_G= ctrlnodes.fptr_g; //7th Pointer for source file
+                                    SrcFilePTR_H= ctrlnodes.fptr_h; //8th Pointer for source file
+                                    SrcFilePTR_I= ctrlnodes.fptr_i; //9th Pointer for source file
+                                    SrcFilePTR_J= ctrlnodes.fptr_j; //10th Pointer for source file
+
+                                    //Export entire file contents
+                                    int status = SrcToDest(dest);
+                                    if (!status){
+                                        std::cout<< "****Error contents of file not exported****\n";
+                                        error = true;
+                                    }else{
+                                        success = true; 
+                                    }
+                                    break;
+                                }
+                            }
+                            if (!success){
+                                std::cout<< "****Error inode not found for desired item****\n";
+                                error = true;
+                            }
+                        }else{
+                            std::cout<< "\n*****Error: This is a Directory*******\n";
+                            error = true;
+                        }
+                    break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_D && !success && !error){
+                ifp.seekg(CurrentDirPTR_D);
+
+                //Search for desired file
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_D + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, sour)== 0){
+                        if(templatdr.dir == 0){
+                            //find inode for desired item
+                            ifp.seekg(0);
+                            while(ifp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (ifp.tellg() < FileSpacePTR))
+                            {
+                                if(ctrlnodes.id == templatdr.dfid){
+                                    SrcFileID= ctrlnodes.id; //inode id# for source file
+                                    SrcFileSize= ctrlnodes.size; //Size of source file
+                                    SrcFilePTR= ctrlnodes.fptr_a; //Pointer for source file
+                                    SrcFilePTR_B= ctrlnodes.fptr_b; //2nd Pointer for source file
+                                    SrcFilePTR_C= ctrlnodes.fptr_c; //3rd Pointer for source file
+                                    SrcFilePTR_D= ctrlnodes.fptr_d; //4th Pointer for source file
+                                    SrcFilePTR_E= ctrlnodes.fptr_e; //5th Pointer for source file
+                                    SrcFilePTR_F= ctrlnodes.fptr_f; //6th Pointer for source file
+                                    SrcFilePTR_G= ctrlnodes.fptr_g; //7th Pointer for source file
+                                    SrcFilePTR_H= ctrlnodes.fptr_h; //8th Pointer for source file
+                                    SrcFilePTR_I= ctrlnodes.fptr_i; //9th Pointer for source file
+                                    SrcFilePTR_J= ctrlnodes.fptr_j; //10th Pointer for source file
+
+                                    //Export entire file contents
+                                    int status = SrcToDest(dest);
+                                    if (!status){
+                                        std::cout<< "****Error contents of file not exported****\n";
+                                        error = true;
+                                    }else{
+                                        success = true; 
+                                    }
+                                    break;
+                                }
+                            }
+                            if (!success){
+                                std::cout<< "****Error inode not found for desired item****\n";
+                                error = true;
+                            }
+                        }else{
+                            std::cout<< "\n*****Error: This is a Directory*******\n";
+                            error = true;
+                        }
+                    break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_E && !success && !error){
+                ifp.seekg(CurrentDirPTR_E);
+
+                //Search for desired file
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_E + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, sour)== 0){
+                        if(templatdr.dir == 0){
+                            //find inode for desired item
+                            ifp.seekg(0);
+                            while(ifp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (ifp.tellg() < FileSpacePTR))
+                            {
+                                if(ctrlnodes.id == templatdr.dfid){
+                                    SrcFileID= ctrlnodes.id; //inode id# for source file
+                                    SrcFileSize= ctrlnodes.size; //Size of source file
+                                    SrcFilePTR= ctrlnodes.fptr_a; //Pointer for source file
+                                    SrcFilePTR_B= ctrlnodes.fptr_b; //2nd Pointer for source file
+                                    SrcFilePTR_C= ctrlnodes.fptr_c; //3rd Pointer for source file
+                                    SrcFilePTR_D= ctrlnodes.fptr_d; //4th Pointer for source file
+                                    SrcFilePTR_E= ctrlnodes.fptr_e; //5th Pointer for source file
+                                    SrcFilePTR_F= ctrlnodes.fptr_f; //6th Pointer for source file
+                                    SrcFilePTR_G= ctrlnodes.fptr_g; //7th Pointer for source file
+                                    SrcFilePTR_H= ctrlnodes.fptr_h; //8th Pointer for source file
+                                    SrcFilePTR_I= ctrlnodes.fptr_i; //9th Pointer for source file
+                                    SrcFilePTR_J= ctrlnodes.fptr_j; //10th Pointer for source file
+
+                                    //Export entire file contents
+                                    int status = SrcToDest(dest);
+                                    if (!status){
+                                        std::cout<< "****Error contents of file not exported****\n";
+                                        error = true;
+                                    }else{
+                                        success = true; 
+                                    }
+                                    break;
+                                }
+                            }
+                            if (!success){
+                                std::cout<< "****Error inode not found for desired item****\n";
+                                error = true;
+                            }
+                        }else{
+                            std::cout<< "\n*****Error: This is a Directory*******\n";
+                            error = true;
+                        }
+                    break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_F && !success && !error){
+                ifp.seekg(CurrentDirPTR_F);
+
+                //Search for desired file
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_F + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, sour)== 0){
+                        if(templatdr.dir == 0){
+                            //find inode for desired item
+                            ifp.seekg(0);
+                            while(ifp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (ifp.tellg() < FileSpacePTR))
+                            {
+                                if(ctrlnodes.id == templatdr.dfid){
+                                    SrcFileID= ctrlnodes.id; //inode id# for source file
+                                    SrcFileSize= ctrlnodes.size; //Size of source file
+                                    SrcFilePTR= ctrlnodes.fptr_a; //Pointer for source file
+                                    SrcFilePTR_B= ctrlnodes.fptr_b; //2nd Pointer for source file
+                                    SrcFilePTR_C= ctrlnodes.fptr_c; //3rd Pointer for source file
+                                    SrcFilePTR_D= ctrlnodes.fptr_d; //4th Pointer for source file
+                                    SrcFilePTR_E= ctrlnodes.fptr_e; //5th Pointer for source file
+                                    SrcFilePTR_F= ctrlnodes.fptr_f; //6th Pointer for source file
+                                    SrcFilePTR_G= ctrlnodes.fptr_g; //7th Pointer for source file
+                                    SrcFilePTR_H= ctrlnodes.fptr_h; //8th Pointer for source file
+                                    SrcFilePTR_I= ctrlnodes.fptr_i; //9th Pointer for source file
+                                    SrcFilePTR_J= ctrlnodes.fptr_j; //10th Pointer for source file
+
+                                    //Export entire file contents
+                                    int status = SrcToDest(dest);
+                                    if (!status){
+                                        std::cout<< "****Error contents of file not exported****\n";
+                                        error = true;
+                                    }else{
+                                        success = true; 
+                                    }
+                                    break;
+                                }
+                            }
+                            if (!success){
+                                std::cout<< "****Error inode not found for desired item****\n";
+                                error = true;
+                            }
+                        }else{
+                            std::cout<< "\n*****Error: This is a Directory*******\n";
+                            error = true;
+                        }
+                    break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_G && !success && !error){
+                ifp.seekg(CurrentDirPTR_G);
+
+                //Search for desired file
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_G + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, sour)== 0){
+                        if(templatdr.dir == 0){
+                            //find inode for desired item
+                            ifp.seekg(0);
+                            while(ifp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (ifp.tellg() < FileSpacePTR))
+                            {
+                                if(ctrlnodes.id == templatdr.dfid){
+                                    SrcFileID= ctrlnodes.id; //inode id# for source file
+                                    SrcFileSize= ctrlnodes.size; //Size of source file
+                                    SrcFilePTR= ctrlnodes.fptr_a; //Pointer for source file
+                                    SrcFilePTR_B= ctrlnodes.fptr_b; //2nd Pointer for source file
+                                    SrcFilePTR_C= ctrlnodes.fptr_c; //3rd Pointer for source file
+                                    SrcFilePTR_D= ctrlnodes.fptr_d; //4th Pointer for source file
+                                    SrcFilePTR_E= ctrlnodes.fptr_e; //5th Pointer for source file
+                                    SrcFilePTR_F= ctrlnodes.fptr_f; //6th Pointer for source file
+                                    SrcFilePTR_G= ctrlnodes.fptr_g; //7th Pointer for source file
+                                    SrcFilePTR_H= ctrlnodes.fptr_h; //8th Pointer for source file
+                                    SrcFilePTR_I= ctrlnodes.fptr_i; //9th Pointer for source file
+                                    SrcFilePTR_J= ctrlnodes.fptr_j; //10th Pointer for source file
+
+                                    //Export entire file contents
+                                    int status = SrcToDest(dest);
+                                    if (!status){
+                                        std::cout<< "****Error contents of file not exported****\n";
+                                        error = true;
+                                    }else{
+                                        success = true; 
+                                    }
+                                    break;
+                                }
+                            }
+                            if (!success){
+                                std::cout<< "****Error inode not found for desired item****\n";
+                                error = true;
+                            }
+                        }else{
+                            std::cout<< "\n*****Error: This is a Directory*******\n";
+                            error = true;
+                        }
+                    break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_H && !success && !error){
+                ifp.seekg(CurrentDirPTR_H);
+
+                //Search for desired file
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_H + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, sour)== 0){
+                        if(templatdr.dir == 0){
+                            //find inode for desired item
+                            ifp.seekg(0);
+                            while(ifp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (ifp.tellg() < FileSpacePTR))
+                            {
+                                if(ctrlnodes.id == templatdr.dfid){
+                                    SrcFileID= ctrlnodes.id; //inode id# for source file
+                                    SrcFileSize= ctrlnodes.size; //Size of source file
+                                    SrcFilePTR= ctrlnodes.fptr_a; //Pointer for source file
+                                    SrcFilePTR_B= ctrlnodes.fptr_b; //2nd Pointer for source file
+                                    SrcFilePTR_C= ctrlnodes.fptr_c; //3rd Pointer for source file
+                                    SrcFilePTR_D= ctrlnodes.fptr_d; //4th Pointer for source file
+                                    SrcFilePTR_E= ctrlnodes.fptr_e; //5th Pointer for source file
+                                    SrcFilePTR_F= ctrlnodes.fptr_f; //6th Pointer for source file
+                                    SrcFilePTR_G= ctrlnodes.fptr_g; //7th Pointer for source file
+                                    SrcFilePTR_H= ctrlnodes.fptr_h; //8th Pointer for source file
+                                    SrcFilePTR_I= ctrlnodes.fptr_i; //9th Pointer for source file
+                                    SrcFilePTR_J= ctrlnodes.fptr_j; //10th Pointer for source file
+
+                                    //Export entire file contents
+                                    int status = SrcToDest(dest);
+                                    if (!status){
+                                        std::cout<< "****Error contents of file not exported****\n";
+                                        error = true;
+                                    }else{
+                                        success = true; 
+                                    }
+                                    break;
+                                }
+                            }
+                            if (!success){
+                                std::cout<< "****Error inode not found for desired item****\n";
+                                error = true;
+                            }
+                        }else{
+                            std::cout<< "\n*****Error: This is a Directory*******\n";
+                            error = true;
+                        }
+                    break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_I && !success && !error){
+                ifp.seekg(CurrentDirPTR_I);
+
+                //Search for desired file
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_I + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, sour)== 0){
+                        if(templatdr.dir == 0){
+                            //find inode for desired item
+                            ifp.seekg(0);
+                            while(ifp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (ifp.tellg() < FileSpacePTR))
+                            {
+                                if(ctrlnodes.id == templatdr.dfid){
+                                    SrcFileID= ctrlnodes.id; //inode id# for source file
+                                    SrcFileSize= ctrlnodes.size; //Size of source file
+                                    SrcFilePTR= ctrlnodes.fptr_a; //Pointer for source file
+                                    SrcFilePTR_B= ctrlnodes.fptr_b; //2nd Pointer for source file
+                                    SrcFilePTR_C= ctrlnodes.fptr_c; //3rd Pointer for source file
+                                    SrcFilePTR_D= ctrlnodes.fptr_d; //4th Pointer for source file
+                                    SrcFilePTR_E= ctrlnodes.fptr_e; //5th Pointer for source file
+                                    SrcFilePTR_F= ctrlnodes.fptr_f; //6th Pointer for source file
+                                    SrcFilePTR_G= ctrlnodes.fptr_g; //7th Pointer for source file
+                                    SrcFilePTR_H= ctrlnodes.fptr_h; //8th Pointer for source file
+                                    SrcFilePTR_I= ctrlnodes.fptr_i; //9th Pointer for source file
+                                    SrcFilePTR_J= ctrlnodes.fptr_j; //10th Pointer for source file
+
+                                    //Export entire file contents
+                                    int status = SrcToDest(dest);
+                                    if (!status){
+                                        std::cout<< "****Error contents of file not exported****\n";
+                                        error = true;
+                                    }else{
+                                        success = true; 
+                                    }
+                                    break;
+                                }
+                            }
+                            if (!success){
+                                std::cout<< "****Error inode not found for desired item****\n";
+                                error = true;
+                            }
+                        }else{
+                            std::cout<< "\n*****Error: This is a Directory*******\n";
+                            error = true;
+                        }
+                    break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_J && !success && !error){
+                ifp.seekg(CurrentDirPTR_J);
+
+                //Search for desired file
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_J + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, sour)== 0){
+                        if(templatdr.dir == 0){
+                            //find inode for desired item
+                            ifp.seekg(0);
+                            while(ifp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (ifp.tellg() < FileSpacePTR))
+                            {
+                                if(ctrlnodes.id == templatdr.dfid){
+                                    SrcFileID= ctrlnodes.id; //inode id# for source file
+                                    SrcFileSize= ctrlnodes.size; //Size of source file
+                                    SrcFilePTR= ctrlnodes.fptr_a; //Pointer for source file
+                                    SrcFilePTR_B= ctrlnodes.fptr_b; //2nd Pointer for source file
+                                    SrcFilePTR_C= ctrlnodes.fptr_c; //3rd Pointer for source file
+                                    SrcFilePTR_D= ctrlnodes.fptr_d; //4th Pointer for source file
+                                    SrcFilePTR_E= ctrlnodes.fptr_e; //5th Pointer for source file
+                                    SrcFilePTR_F= ctrlnodes.fptr_f; //6th Pointer for source file
+                                    SrcFilePTR_G= ctrlnodes.fptr_g; //7th Pointer for source file
+                                    SrcFilePTR_H= ctrlnodes.fptr_h; //8th Pointer for source file
+                                    SrcFilePTR_I= ctrlnodes.fptr_i; //9th Pointer for source file
+                                    SrcFilePTR_J= ctrlnodes.fptr_j; //10th Pointer for source file
+
+                                    //Export entire file contents
+                                    int status = SrcToDest(dest);
+                                    if (!status){
+                                        std::cout<< "****Error contents of file not exported****\n";
+                                        error = true;
+                                    }else{
+                                        success = true; 
+                                    }
+                                    break;
+                                }
+                            }
+                            if (!success){
+                                std::cout<< "****Error inode not found for desired item****\n";
+                                error = true;
+                            }
+                        }else{
+                            std::cout<< "\n*****Error: This is a Directory*******\n";
+                            error = true;
+                        }
+                    break;
+                    }
+                }
+            }
+        }
+    }else{
+    std::cout<<"****Error Accessing File System Disk****\n\n";
+    }
 }
 
 void Commands::tree(){
@@ -2683,11 +3511,562 @@ void Commands::tree(){
 }
 
 void Commands::import(std::string src, std::string dest){
-    //add code
+    
+    //open external file
+    char sour[src.length()];
+    strcpy(sour, src.c_str());
+    std::fstream ifp(sour, std::ios::in);
+    
+    //create internal file;
+    DestFileID = open(dest, "w");
+    
+    //read in external file to memory
+    ifp.seekg(0,ifp.end);
+    int len = ifp.tellg();
+    char* buffer = new char[len];
+    ifp.seekg(0,ifp.beg);
+    ifp.read(buffer, len);
+    
+    //write external file to 
+    write(DestFileID, buffer);
+    
 }
 
 void Commands::fexport(std::string src, std::string dest){
-    //add code
+    
+    //Search current directory for desired file name
+    indexnode ctrlnodes;
+    directory templatdr;
+    
+    bool error = false;
+    bool success = false;
+    
+    //convert inputed name to char array
+    char fname[20]; //name of file or directory
+    strcpy(fname, src.c_str());
+    
+    //open disk
+    std::fstream ifp("filesystem.dat", std::ios::in|std::ios::binary);
+    
+    //ensure "disk" opened correctly
+    if (ifp){
+        
+        //get info of current directory
+        int status = GetCurDirInfo();
+        if (!status){
+            CurrentFileStatus = false;
+            std::cout<< "****Error information for current directory not found****\n";
+            error = true;
+        }
+        
+        if(!error){
+            
+            //go to current directory
+            ifp.seekg(CurrentDirPTR);
+
+            //Search for desired item
+            while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR + DataBlockSize)) && !error)
+            {
+                if(strcmp(templatdr.dfname, fname)== 0){
+                    if(templatdr.dir == 0){
+                        //find inode for desired item
+                        ifp.seekg(0);
+                        while(ifp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (ifp.tellg() < FileSpacePTR))
+                        {
+                            if(ctrlnodes.id == templatdr.dfid){
+                                SrcFileID= ctrlnodes.id; //inode id# for source file
+                                SrcFileSize= ctrlnodes.size; //Size of source file
+                                SrcFilePTR= ctrlnodes.fptr_a; //Pointer for source file
+                                SrcFilePTR_B= ctrlnodes.fptr_b; //2nd Pointer for source file
+                                SrcFilePTR_C= ctrlnodes.fptr_c; //3rd Pointer for source file
+                                SrcFilePTR_D= ctrlnodes.fptr_d; //4th Pointer for source file
+                                SrcFilePTR_E= ctrlnodes.fptr_e; //5th Pointer for source file
+                                SrcFilePTR_F= ctrlnodes.fptr_f; //6th Pointer for source file
+                                SrcFilePTR_G= ctrlnodes.fptr_g; //7th Pointer for source file
+                                SrcFilePTR_H= ctrlnodes.fptr_h; //8th Pointer for source file
+                                SrcFilePTR_I= ctrlnodes.fptr_i; //9th Pointer for source file
+                                SrcFilePTR_J= ctrlnodes.fptr_j; //10th Pointer for source file
+
+                                //Export entire file contents
+                                int status = ExportSrcFile(dest);
+                                if (!status){
+                                    std::cout<< "****Error contents of file not exported****\n";
+                                    error = true;
+                                }else{
+                                    success = true; 
+                                }
+                                break;
+                            }
+                        }
+                        if (!success){
+                            std::cout<< "****Error inode not found for desired item****\n";
+                            error = true;
+                        }
+                    }else{
+                        std::cout<< "\n*****Error: This is a Directory*******\n";
+                        error = true;
+                    }
+                break;
+                }
+                
+            }
+            
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_B && !success && !error){
+                ifp.seekg(CurrentDirPTR_B);
+
+                //Search for desired file
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_B + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, fname)== 0){
+                        if(templatdr.dir == 0){
+                            //find inode for desired item
+                            ifp.seekg(0);
+                            while(ifp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (ifp.tellg() < FileSpacePTR))
+                            {
+                                if(ctrlnodes.id == templatdr.dfid){
+                                    SrcFileID= ctrlnodes.id; //inode id# for source file
+                                    SrcFileSize= ctrlnodes.size; //Size of source file
+                                    SrcFilePTR= ctrlnodes.fptr_a; //Pointer for source file
+                                    SrcFilePTR_B= ctrlnodes.fptr_b; //2nd Pointer for source file
+                                    SrcFilePTR_C= ctrlnodes.fptr_c; //3rd Pointer for source file
+                                    SrcFilePTR_D= ctrlnodes.fptr_d; //4th Pointer for source file
+                                    SrcFilePTR_E= ctrlnodes.fptr_e; //5th Pointer for source file
+                                    SrcFilePTR_F= ctrlnodes.fptr_f; //6th Pointer for source file
+                                    SrcFilePTR_G= ctrlnodes.fptr_g; //7th Pointer for source file
+                                    SrcFilePTR_H= ctrlnodes.fptr_h; //8th Pointer for source file
+                                    SrcFilePTR_I= ctrlnodes.fptr_i; //9th Pointer for source file
+                                    SrcFilePTR_J= ctrlnodes.fptr_j; //10th Pointer for source file
+
+                                    //Export entire file contents
+                                    int status = ExportSrcFile(dest);
+                                    if (!status){
+                                        std::cout<< "****Error contents of file not exported****\n";
+                                        error = true;
+                                    }else{
+                                        success = true; 
+                                    }
+                                    break;
+                                }
+                            }
+                            if (!success){
+                                std::cout<< "****Error inode not found for desired item****\n";
+                                error = true;
+                            }
+                        }else{
+                            std::cout<< "\n*****Error: This is a Directory*******\n";
+                            error = true;
+                        }
+                    break;
+                    }
+                    
+                }
+            }
+            
+            //go to next block of current directory, if it exists, to continue the search           
+            if(CurrentDirPTR_C && !success && !error){
+                ifp.seekg(CurrentDirPTR_C);
+
+                //Search for desired file
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_C + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, fname)== 0){
+                        if(templatdr.dir == 0){
+                            //find inode for desired item
+                            ifp.seekg(0);
+                            while(ifp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (ifp.tellg() < FileSpacePTR))
+                            {
+                                if(ctrlnodes.id == templatdr.dfid){
+                                    SrcFileID= ctrlnodes.id; //inode id# for source file
+                                    SrcFileSize= ctrlnodes.size; //Size of source file
+                                    SrcFilePTR= ctrlnodes.fptr_a; //Pointer for source file
+                                    SrcFilePTR_B= ctrlnodes.fptr_b; //2nd Pointer for source file
+                                    SrcFilePTR_C= ctrlnodes.fptr_c; //3rd Pointer for source file
+                                    SrcFilePTR_D= ctrlnodes.fptr_d; //4th Pointer for source file
+                                    SrcFilePTR_E= ctrlnodes.fptr_e; //5th Pointer for source file
+                                    SrcFilePTR_F= ctrlnodes.fptr_f; //6th Pointer for source file
+                                    SrcFilePTR_G= ctrlnodes.fptr_g; //7th Pointer for source file
+                                    SrcFilePTR_H= ctrlnodes.fptr_h; //8th Pointer for source file
+                                    SrcFilePTR_I= ctrlnodes.fptr_i; //9th Pointer for source file
+                                    SrcFilePTR_J= ctrlnodes.fptr_j; //10th Pointer for source file
+
+                                    //Export entire file contents
+                                    int status = ExportSrcFile(dest);
+                                    if (!status){
+                                        std::cout<< "****Error contents of file not exported****\n";
+                                        error = true;
+                                    }else{
+                                        success = true; 
+                                    }
+                                    break;
+                                }
+                            }
+                            if (!success){
+                                std::cout<< "****Error inode not found for desired item****\n";
+                                error = true;
+                            }
+                        }else{
+                            std::cout<< "\n*****Error: This is a Directory*******\n";
+                            error = true;
+                        }
+                    break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_D && !success && !error){
+                ifp.seekg(CurrentDirPTR_D);
+
+                //Search for desired file
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_D + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, fname)== 0){
+                        if(templatdr.dir == 0){
+                            //find inode for desired item
+                            ifp.seekg(0);
+                            while(ifp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (ifp.tellg() < FileSpacePTR))
+                            {
+                                if(ctrlnodes.id == templatdr.dfid){
+                                    SrcFileID= ctrlnodes.id; //inode id# for source file
+                                    SrcFileSize= ctrlnodes.size; //Size of source file
+                                    SrcFilePTR= ctrlnodes.fptr_a; //Pointer for source file
+                                    SrcFilePTR_B= ctrlnodes.fptr_b; //2nd Pointer for source file
+                                    SrcFilePTR_C= ctrlnodes.fptr_c; //3rd Pointer for source file
+                                    SrcFilePTR_D= ctrlnodes.fptr_d; //4th Pointer for source file
+                                    SrcFilePTR_E= ctrlnodes.fptr_e; //5th Pointer for source file
+                                    SrcFilePTR_F= ctrlnodes.fptr_f; //6th Pointer for source file
+                                    SrcFilePTR_G= ctrlnodes.fptr_g; //7th Pointer for source file
+                                    SrcFilePTR_H= ctrlnodes.fptr_h; //8th Pointer for source file
+                                    SrcFilePTR_I= ctrlnodes.fptr_i; //9th Pointer for source file
+                                    SrcFilePTR_J= ctrlnodes.fptr_j; //10th Pointer for source file
+
+                                    //Export entire file contents
+                                    int status = ExportSrcFile(dest);
+                                    if (!status){
+                                        std::cout<< "****Error contents of file not exported****\n";
+                                        error = true;
+                                    }else{
+                                        success = true; 
+                                    }
+                                    break;
+                                }
+                            }
+                            if (!success){
+                                std::cout<< "****Error inode not found for desired item****\n";
+                                error = true;
+                            }
+                        }else{
+                            std::cout<< "\n*****Error: This is a Directory*******\n";
+                            error = true;
+                        }
+                    break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_E && !success && !error){
+                ifp.seekg(CurrentDirPTR_E);
+
+                //Search for desired file
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_E + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, fname)== 0){
+                        if(templatdr.dir == 0){
+                            //find inode for desired item
+                            ifp.seekg(0);
+                            while(ifp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (ifp.tellg() < FileSpacePTR))
+                            {
+                                if(ctrlnodes.id == templatdr.dfid){
+                                    SrcFileID= ctrlnodes.id; //inode id# for source file
+                                    SrcFileSize= ctrlnodes.size; //Size of source file
+                                    SrcFilePTR= ctrlnodes.fptr_a; //Pointer for source file
+                                    SrcFilePTR_B= ctrlnodes.fptr_b; //2nd Pointer for source file
+                                    SrcFilePTR_C= ctrlnodes.fptr_c; //3rd Pointer for source file
+                                    SrcFilePTR_D= ctrlnodes.fptr_d; //4th Pointer for source file
+                                    SrcFilePTR_E= ctrlnodes.fptr_e; //5th Pointer for source file
+                                    SrcFilePTR_F= ctrlnodes.fptr_f; //6th Pointer for source file
+                                    SrcFilePTR_G= ctrlnodes.fptr_g; //7th Pointer for source file
+                                    SrcFilePTR_H= ctrlnodes.fptr_h; //8th Pointer for source file
+                                    SrcFilePTR_I= ctrlnodes.fptr_i; //9th Pointer for source file
+                                    SrcFilePTR_J= ctrlnodes.fptr_j; //10th Pointer for source file
+
+                                    //Export entire file contents
+                                    int status = ExportSrcFile(dest);
+                                    if (!status){
+                                        std::cout<< "****Error contents of file not exported****\n";
+                                        error = true;
+                                    }else{
+                                        success = true; 
+                                    }
+                                    break;
+                                }
+                            }
+                            if (!success){
+                                std::cout<< "****Error inode not found for desired item****\n";
+                                error = true;
+                            }
+                        }else{
+                            std::cout<< "\n*****Error: This is a Directory*******\n";
+                            error = true;
+                        }
+                    break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_F && !success && !error){
+                ifp.seekg(CurrentDirPTR_F);
+
+                //Search for desired file
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_F + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, fname)== 0){
+                        if(templatdr.dir == 0){
+                            //find inode for desired item
+                            ifp.seekg(0);
+                            while(ifp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (ifp.tellg() < FileSpacePTR))
+                            {
+                                if(ctrlnodes.id == templatdr.dfid){
+                                    SrcFileID= ctrlnodes.id; //inode id# for source file
+                                    SrcFileSize= ctrlnodes.size; //Size of source file
+                                    SrcFilePTR= ctrlnodes.fptr_a; //Pointer for source file
+                                    SrcFilePTR_B= ctrlnodes.fptr_b; //2nd Pointer for source file
+                                    SrcFilePTR_C= ctrlnodes.fptr_c; //3rd Pointer for source file
+                                    SrcFilePTR_D= ctrlnodes.fptr_d; //4th Pointer for source file
+                                    SrcFilePTR_E= ctrlnodes.fptr_e; //5th Pointer for source file
+                                    SrcFilePTR_F= ctrlnodes.fptr_f; //6th Pointer for source file
+                                    SrcFilePTR_G= ctrlnodes.fptr_g; //7th Pointer for source file
+                                    SrcFilePTR_H= ctrlnodes.fptr_h; //8th Pointer for source file
+                                    SrcFilePTR_I= ctrlnodes.fptr_i; //9th Pointer for source file
+                                    SrcFilePTR_J= ctrlnodes.fptr_j; //10th Pointer for source file
+
+                                    //Export entire file contents
+                                    int status = ExportSrcFile(dest);
+                                    if (!status){
+                                        std::cout<< "****Error contents of file not exported****\n";
+                                        error = true;
+                                    }else{
+                                        success = true; 
+                                    }
+                                    break;
+                                }
+                            }
+                            if (!success){
+                                std::cout<< "****Error inode not found for desired item****\n";
+                                error = true;
+                            }
+                        }else{
+                            std::cout<< "\n*****Error: This is a Directory*******\n";
+                            error = true;
+                        }
+                    break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_G && !success && !error){
+                ifp.seekg(CurrentDirPTR_G);
+
+                //Search for desired file
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_G + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, fname)== 0){
+                        if(templatdr.dir == 0){
+                            //find inode for desired item
+                            ifp.seekg(0);
+                            while(ifp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (ifp.tellg() < FileSpacePTR))
+                            {
+                                if(ctrlnodes.id == templatdr.dfid){
+                                    SrcFileID= ctrlnodes.id; //inode id# for source file
+                                    SrcFileSize= ctrlnodes.size; //Size of source file
+                                    SrcFilePTR= ctrlnodes.fptr_a; //Pointer for source file
+                                    SrcFilePTR_B= ctrlnodes.fptr_b; //2nd Pointer for source file
+                                    SrcFilePTR_C= ctrlnodes.fptr_c; //3rd Pointer for source file
+                                    SrcFilePTR_D= ctrlnodes.fptr_d; //4th Pointer for source file
+                                    SrcFilePTR_E= ctrlnodes.fptr_e; //5th Pointer for source file
+                                    SrcFilePTR_F= ctrlnodes.fptr_f; //6th Pointer for source file
+                                    SrcFilePTR_G= ctrlnodes.fptr_g; //7th Pointer for source file
+                                    SrcFilePTR_H= ctrlnodes.fptr_h; //8th Pointer for source file
+                                    SrcFilePTR_I= ctrlnodes.fptr_i; //9th Pointer for source file
+                                    SrcFilePTR_J= ctrlnodes.fptr_j; //10th Pointer for source file
+
+                                    //Export entire file contents
+                                    int status = ExportSrcFile(dest);
+                                    if (!status){
+                                        std::cout<< "****Error contents of file not exported****\n";
+                                        error = true;
+                                    }else{
+                                        success = true; 
+                                    }
+                                    break;
+                                }
+                            }
+                            if (!success){
+                                std::cout<< "****Error inode not found for desired item****\n";
+                                error = true;
+                            }
+                        }else{
+                            std::cout<< "\n*****Error: This is a Directory*******\n";
+                            error = true;
+                        }
+                    break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_H && !success && !error){
+                ifp.seekg(CurrentDirPTR_H);
+
+                //Search for desired file
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_H + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, fname)== 0){
+                        if(templatdr.dir == 0){
+                            //find inode for desired item
+                            ifp.seekg(0);
+                            while(ifp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (ifp.tellg() < FileSpacePTR))
+                            {
+                                if(ctrlnodes.id == templatdr.dfid){
+                                    SrcFileID= ctrlnodes.id; //inode id# for source file
+                                    SrcFileSize= ctrlnodes.size; //Size of source file
+                                    SrcFilePTR= ctrlnodes.fptr_a; //Pointer for source file
+                                    SrcFilePTR_B= ctrlnodes.fptr_b; //2nd Pointer for source file
+                                    SrcFilePTR_C= ctrlnodes.fptr_c; //3rd Pointer for source file
+                                    SrcFilePTR_D= ctrlnodes.fptr_d; //4th Pointer for source file
+                                    SrcFilePTR_E= ctrlnodes.fptr_e; //5th Pointer for source file
+                                    SrcFilePTR_F= ctrlnodes.fptr_f; //6th Pointer for source file
+                                    SrcFilePTR_G= ctrlnodes.fptr_g; //7th Pointer for source file
+                                    SrcFilePTR_H= ctrlnodes.fptr_h; //8th Pointer for source file
+                                    SrcFilePTR_I= ctrlnodes.fptr_i; //9th Pointer for source file
+                                    SrcFilePTR_J= ctrlnodes.fptr_j; //10th Pointer for source file
+
+                                    //Export entire file contents
+                                    int status = ExportSrcFile(dest);
+                                    if (!status){
+                                        std::cout<< "****Error contents of file not exported****\n";
+                                        error = true;
+                                    }else{
+                                        success = true; 
+                                    }
+                                    break;
+                                }
+                            }
+                            if (!success){
+                                std::cout<< "****Error inode not found for desired item****\n";
+                                error = true;
+                            }
+                        }else{
+                            std::cout<< "\n*****Error: This is a Directory*******\n";
+                            error = true;
+                        }
+                    break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_I && !success && !error){
+                ifp.seekg(CurrentDirPTR_I);
+
+                //Search for desired file
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_I + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, fname)== 0){
+                        if(templatdr.dir == 0){
+                            //find inode for desired item
+                            ifp.seekg(0);
+                            while(ifp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (ifp.tellg() < FileSpacePTR))
+                            {
+                                if(ctrlnodes.id == templatdr.dfid){
+                                    SrcFileID= ctrlnodes.id; //inode id# for source file
+                                    SrcFileSize= ctrlnodes.size; //Size of source file
+                                    SrcFilePTR= ctrlnodes.fptr_a; //Pointer for source file
+                                    SrcFilePTR_B= ctrlnodes.fptr_b; //2nd Pointer for source file
+                                    SrcFilePTR_C= ctrlnodes.fptr_c; //3rd Pointer for source file
+                                    SrcFilePTR_D= ctrlnodes.fptr_d; //4th Pointer for source file
+                                    SrcFilePTR_E= ctrlnodes.fptr_e; //5th Pointer for source file
+                                    SrcFilePTR_F= ctrlnodes.fptr_f; //6th Pointer for source file
+                                    SrcFilePTR_G= ctrlnodes.fptr_g; //7th Pointer for source file
+                                    SrcFilePTR_H= ctrlnodes.fptr_h; //8th Pointer for source file
+                                    SrcFilePTR_I= ctrlnodes.fptr_i; //9th Pointer for source file
+                                    SrcFilePTR_J= ctrlnodes.fptr_j; //10th Pointer for source file
+
+                                    //Export entire file contents
+                                    int status = ExportSrcFile(dest);
+                                    if (!status){
+                                        std::cout<< "****Error contents of file not exported****\n";
+                                        error = true;
+                                    }else{
+                                        success = true; 
+                                    }
+                                    break;
+                                }
+                            }
+                            if (!success){
+                                std::cout<< "****Error inode not found for desired item****\n";
+                                error = true;
+                            }
+                        }else{
+                            std::cout<< "\n*****Error: This is a Directory*******\n";
+                            error = true;
+                        }
+                    break;
+                    }
+                }
+            }
+            //go to next block of current directory, if it exists, to continue the search
+            if(CurrentDirPTR_J && !success && !error){
+                ifp.seekg(CurrentDirPTR_J);
+
+                //Search for desired file
+                while(ifp.read((char*)&templatdr, sizeof(templatdr)) && (ifp.tellg()< (CurrentDirPTR_J + DataBlockSize)) && !error)
+                {
+                    if(strcmp(templatdr.dfname, fname)== 0){
+                        if(templatdr.dir == 0){
+                            //find inode for desired item
+                            ifp.seekg(0);
+                            while(ifp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (ifp.tellg() < FileSpacePTR))
+                            {
+                                if(ctrlnodes.id == templatdr.dfid){
+                                    SrcFileID= ctrlnodes.id; //inode id# for source file
+                                    SrcFileSize= ctrlnodes.size; //Size of source file
+                                    SrcFilePTR= ctrlnodes.fptr_a; //Pointer for source file
+                                    SrcFilePTR_B= ctrlnodes.fptr_b; //2nd Pointer for source file
+                                    SrcFilePTR_C= ctrlnodes.fptr_c; //3rd Pointer for source file
+                                    SrcFilePTR_D= ctrlnodes.fptr_d; //4th Pointer for source file
+                                    SrcFilePTR_E= ctrlnodes.fptr_e; //5th Pointer for source file
+                                    SrcFilePTR_F= ctrlnodes.fptr_f; //6th Pointer for source file
+                                    SrcFilePTR_G= ctrlnodes.fptr_g; //7th Pointer for source file
+                                    SrcFilePTR_H= ctrlnodes.fptr_h; //8th Pointer for source file
+                                    SrcFilePTR_I= ctrlnodes.fptr_i; //9th Pointer for source file
+                                    SrcFilePTR_J= ctrlnodes.fptr_j; //10th Pointer for source file
+
+                                    //Export entire file contents
+                                    int status = ExportSrcFile(dest);
+                                    if (!status){
+                                        std::cout<< "****Error contents of file not exported****\n";
+                                        error = true;
+                                    }else{
+                                        success = true; 
+                                    }
+                                    break;
+                                }
+                            }
+                            if (!success){
+                                std::cout<< "****Error inode not found for desired item****\n";
+                                error = true;
+                            }
+                        }else{
+                            std::cout<< "\n*****Error: This is a Directory*******\n";
+                            error = true;
+                        }
+                    break;
+                    }
+                }
+            }
+        }
+    }else{
+        std::cout<<"****Error Accessing File System Disk****\n\n";
+    }
 }
 
 int Commands::GetNextDataBlock(){
@@ -3521,6 +4900,7 @@ int Commands::ReadSrcFile(){
                     SrcFileOffset++;
                 }
             }
+            std::cout<< "\n\n";
             return 1;
         }else {
             std::cout<<"****Error Accessing File System Disk****\n\n";
@@ -3529,5 +4909,197 @@ int Commands::ReadSrcFile(){
     }else{
         std::cout<<"****Error Accessing File System Disk****\n\n";
         return 0;
+    }
+}
+
+int Commands::ExportSrcFile(std::string dest){
+    bool error = false;
+    indexnode ctrlnodes;
+    char dst[dest.length()];
+    //open filesystem "disk" for reading
+    std::fstream ifp ("filesystem.dat", std::ios::in|std::ios::binary);
+    
+    strcpy(dst, dest.c_str());
+    //open external file
+    std::fstream ofp(dst, std::ios::out);
+    
+    //ensure "disk" opened correctly
+    if (ifp && ofp){
+
+        char buffer;
+        
+        SrcFileOffset = 0;
+        if((SrcFileOffset < DataBlockSize) && (SrcFileOffset < SrcFileSize)){
+            ifp.seekg(SrcFilePTR);
+            while((SrcFileOffset < DataBlockSize) && (SrcFileOffset < SrcFileSize) && ifp.read((char*)&buffer,sizeof(buffer))){
+                ofp.write((char*)&buffer,sizeof(buffer));
+                SrcFileOffset++;
+            }
+        }
+        if((SrcFileOffset > DataBlockSize) && (SrcFileOffset < (2 * DataBlockSize)) && (SrcFileOffset < SrcFileSize)){
+            ifp.seekg(SrcFilePTR_B + SrcFileOffset - DataBlockSize);
+            while((SrcFileOffset > DataBlockSize) && (SrcFileOffset < (2 * DataBlockSize)) && (SrcFileOffset < SrcFileSize) && ifp.read((char*)&buffer,sizeof(buffer))){
+                ofp.write((char*)&buffer,sizeof(buffer));
+                SrcFileOffset++;
+            }
+        }
+        if((SrcFileOffset > (2 * DataBlockSize)) && (SrcFileOffset < (3 * DataBlockSize)) && (SrcFileOffset < SrcFileSize)){
+            ifp.seekg(SrcFilePTR_C + SrcFileOffset - (2 * DataBlockSize));
+            while((SrcFileOffset > (2 * DataBlockSize)) && (SrcFileOffset < (3 * DataBlockSize)) && (SrcFileOffset < SrcFileSize) && ifp.read((char*)&buffer,sizeof(buffer))){
+                ofp.write((char*)&buffer,sizeof(buffer));
+                SrcFileOffset++;
+            }
+        }
+        if((SrcFileOffset > (3 * DataBlockSize)) && (SrcFileOffset < (4 * DataBlockSize)) && (SrcFileOffset < SrcFileSize)){
+            ifp.seekg(SrcFilePTR_D + SrcFileOffset - (3 * DataBlockSize));
+            while((SrcFileOffset > (3 * DataBlockSize)) && (SrcFileOffset < (4 * DataBlockSize)) && (SrcFileOffset < SrcFileSize) && ifp.read((char*)&buffer,sizeof(buffer))){
+                ofp.write((char*)&buffer,sizeof(buffer));
+                SrcFileOffset++;
+            }
+        }
+        if((SrcFileOffset > (4 * DataBlockSize)) && (SrcFileOffset < (5 * DataBlockSize)) && (SrcFileOffset < SrcFileSize)){
+            ifp.seekg(SrcFilePTR_E + SrcFileOffset - (4 * DataBlockSize));
+            while((SrcFileOffset > (4 * DataBlockSize)) && (SrcFileOffset < (5 * DataBlockSize)) && (SrcFileOffset < SrcFileSize) && ifp.read((char*)&buffer,sizeof(buffer))){
+                ofp.write((char*)&buffer,sizeof(buffer));
+                SrcFileOffset++;
+            }
+        }
+        if((SrcFileOffset > (5 * DataBlockSize)) && (SrcFileOffset < (6 * DataBlockSize)) && (SrcFileOffset < SrcFileSize)){
+            ifp.seekg(SrcFilePTR_F + SrcFileOffset - (5 * DataBlockSize));
+            while((SrcFileOffset > (5 * DataBlockSize)) && (SrcFileOffset < (6 * DataBlockSize)) && (SrcFileOffset < SrcFileSize) && ifp.read((char*)&buffer,sizeof(buffer))){
+                ofp.write((char*)&buffer,sizeof(buffer));
+                SrcFileOffset++;
+            }
+        }
+        if((SrcFileOffset > (6 * DataBlockSize)) && (SrcFileOffset < (7 * DataBlockSize)) && (SrcFileOffset < SrcFileSize)){
+            ifp.seekg(SrcFilePTR_G + SrcFileOffset - (6 * DataBlockSize));
+            while((SrcFileOffset > (6 * DataBlockSize)) && (SrcFileOffset < (7 * DataBlockSize)) && (SrcFileOffset < SrcFileSize) && ifp.read((char*)&buffer,sizeof(buffer))){
+                ofp.write((char*)&buffer,sizeof(buffer));
+                SrcFileOffset++;
+            }
+        }
+        if((SrcFileOffset > (7 * DataBlockSize)) && (SrcFileOffset < (8 * DataBlockSize)) && (SrcFileOffset < SrcFileSize)){
+            ifp.seekg(SrcFilePTR_H + SrcFileOffset - (7 * DataBlockSize));
+            while((SrcFileOffset > (7 * DataBlockSize)) && (SrcFileOffset < (8 * DataBlockSize)) && (SrcFileOffset < SrcFileSize) && ifp.read((char*)&buffer,sizeof(buffer))){
+                ofp.write((char*)&buffer,sizeof(buffer));
+                SrcFileOffset++;
+            }
+        }
+        if((SrcFileOffset > (8 * DataBlockSize)) && (SrcFileOffset < (9 * DataBlockSize)) && (SrcFileOffset < SrcFileSize)){
+            ifp.seekg(SrcFilePTR_I + SrcFileOffset - (8 * DataBlockSize));
+            while((SrcFileOffset > (8 * DataBlockSize)) && (SrcFileOffset < (9 * DataBlockSize)) && (SrcFileOffset < SrcFileSize) && ifp.read((char*)&buffer,sizeof(buffer))){
+                ofp.write((char*)&buffer,sizeof(buffer));
+                SrcFileOffset++;
+            }
+        }
+        if((SrcFileOffset > (9 * DataBlockSize)) && (SrcFileOffset < (10 * DataBlockSize)) && (SrcFileOffset < SrcFileSize)){
+            ifp.seekg(SrcFilePTR_J + SrcFileOffset - (9 * DataBlockSize));
+            while((SrcFileOffset > (9 * DataBlockSize)) && (SrcFileOffset < (10 * DataBlockSize)) && (SrcFileOffset < SrcFileSize) && ifp.read((char*)&buffer,sizeof(buffer))){
+                ofp.write((char*)&buffer,sizeof(buffer));
+                SrcFileOffset++;
+            }
+        }
+        return 1;
+    }else {
+        std::cout<<"****Error File I/O Issue****\n\n";
+        return 0;
+    }
+}
+
+int Commands::SrcToDest(std::string dest){
+    bool error = false;
+    indexnode ctrlnodes;
+    
+    //create destination file
+    DestFileID = open(dest, "w");
+    if(DestFileID== -1){
+        error = true;
+        std::cout<<"****Error Destination file not created****\n\n";
+    }else{
+
+        //open filesystem "disk" for reading and writing
+        std::fstream ifp ("filesystem.dat", std::ios::in|std::ios::binary);
+
+        //ensure "disk" opened correctly
+        if (ifp){
+
+            char buffer;
+
+            SrcFileOffset = 0;
+            if((SrcFileOffset < DataBlockSize) && (SrcFileOffset < SrcFileSize)){
+                ifp.seekg(SrcFilePTR);
+                while((SrcFileOffset < DataBlockSize) && (SrcFileOffset < SrcFileSize) && ifp.read((char*)&buffer,sizeof(buffer))){
+                    write(DestFileID, (char*)&buffer);
+                    SrcFileOffset++;
+                }
+            }
+            if((SrcFileOffset > DataBlockSize) && (SrcFileOffset < (2 * DataBlockSize)) && (SrcFileOffset < SrcFileSize)){
+                ifp.seekg(SrcFilePTR_B + SrcFileOffset - DataBlockSize);
+                while((SrcFileOffset > DataBlockSize) && (SrcFileOffset < (2 * DataBlockSize)) && (SrcFileOffset < SrcFileSize) && ifp.read((char*)&buffer,sizeof(buffer))){
+                    write(DestFileID, (char*)&buffer);
+                    SrcFileOffset++;
+                }
+            }
+            if((SrcFileOffset > (2 * DataBlockSize)) && (SrcFileOffset < (3 * DataBlockSize)) && (SrcFileOffset < SrcFileSize)){
+                ifp.seekg(SrcFilePTR_C + SrcFileOffset - (2 * DataBlockSize));
+                while((SrcFileOffset > (2 * DataBlockSize)) && (SrcFileOffset < (3 * DataBlockSize)) && (SrcFileOffset < SrcFileSize) && ifp.read((char*)&buffer,sizeof(buffer))){
+                    write(DestFileID, (char*)&buffer);
+                    SrcFileOffset++;
+                }
+            }
+            if((SrcFileOffset > (3 * DataBlockSize)) && (SrcFileOffset < (4 * DataBlockSize)) && (SrcFileOffset < SrcFileSize)){
+                ifp.seekg(SrcFilePTR_D + SrcFileOffset - (3 * DataBlockSize));
+                while((SrcFileOffset > (3 * DataBlockSize)) && (SrcFileOffset < (4 * DataBlockSize)) && (SrcFileOffset < SrcFileSize) && ifp.read((char*)&buffer,sizeof(buffer))){
+                    write(DestFileID, (char*)&buffer);
+                    SrcFileOffset++;
+                }
+            }
+            if((SrcFileOffset > (4 * DataBlockSize)) && (SrcFileOffset < (5 * DataBlockSize)) && (SrcFileOffset < SrcFileSize)){
+                ifp.seekg(SrcFilePTR_E + SrcFileOffset - (4 * DataBlockSize));
+                while((SrcFileOffset > (4 * DataBlockSize)) && (SrcFileOffset < (5 * DataBlockSize)) && (SrcFileOffset < SrcFileSize) && ifp.read((char*)&buffer,sizeof(buffer))){
+                    write(DestFileID, (char*)&buffer);
+                    SrcFileOffset++;
+                }
+            }
+            if((SrcFileOffset > (5 * DataBlockSize)) && (SrcFileOffset < (6 * DataBlockSize)) && (SrcFileOffset < SrcFileSize)){
+                ifp.seekg(SrcFilePTR_F + SrcFileOffset - (5 * DataBlockSize));
+                while((SrcFileOffset > (5 * DataBlockSize)) && (SrcFileOffset < (6 * DataBlockSize)) && (SrcFileOffset < SrcFileSize) && ifp.read((char*)&buffer,sizeof(buffer))){
+                    write(DestFileID, (char*)&buffer);
+                    SrcFileOffset++;
+                }
+            }
+            if((SrcFileOffset > (6 * DataBlockSize)) && (SrcFileOffset < (7 * DataBlockSize)) && (SrcFileOffset < SrcFileSize)){
+                ifp.seekg(SrcFilePTR_G + SrcFileOffset - (6 * DataBlockSize));
+                while((SrcFileOffset > (6 * DataBlockSize)) && (SrcFileOffset < (7 * DataBlockSize)) && (SrcFileOffset < SrcFileSize) && ifp.read((char*)&buffer,sizeof(buffer))){
+                    write(DestFileID, (char*)&buffer);
+                    SrcFileOffset++;
+                }
+            }
+            if((SrcFileOffset > (7 * DataBlockSize)) && (SrcFileOffset < (8 * DataBlockSize)) && (SrcFileOffset < SrcFileSize)){
+                ifp.seekg(SrcFilePTR_H + SrcFileOffset - (7 * DataBlockSize));
+                while((SrcFileOffset > (7 * DataBlockSize)) && (SrcFileOffset < (8 * DataBlockSize)) && (SrcFileOffset < SrcFileSize) && ifp.read((char*)&buffer,sizeof(buffer))){
+                    write(DestFileID, (char*)&buffer);
+                    SrcFileOffset++;
+                }
+            }
+            if((SrcFileOffset > (8 * DataBlockSize)) && (SrcFileOffset < (9 * DataBlockSize)) && (SrcFileOffset < SrcFileSize)){
+                ifp.seekg(SrcFilePTR_I + SrcFileOffset - (8 * DataBlockSize));
+                while((SrcFileOffset > (8 * DataBlockSize)) && (SrcFileOffset < (9 * DataBlockSize)) && (SrcFileOffset < SrcFileSize) && ifp.read((char*)&buffer,sizeof(buffer))){
+                    write(DestFileID, (char*)&buffer);
+                    SrcFileOffset++;
+                }
+            }
+            if((SrcFileOffset > (9 * DataBlockSize)) && (SrcFileOffset < (10 * DataBlockSize)) && (SrcFileOffset < SrcFileSize)){
+                ifp.seekg(SrcFilePTR_J + SrcFileOffset - (9 * DataBlockSize));
+                while((SrcFileOffset > (9 * DataBlockSize)) && (SrcFileOffset < (10 * DataBlockSize)) && (SrcFileOffset < SrcFileSize) && ifp.read((char*)&buffer,sizeof(buffer))){
+                    write(DestFileID, (char*)&buffer);
+                    SrcFileOffset++;
+                }
+            }
+            return 1;
+        }else {
+            std::cout<<"****Error File I/O Issue****\n\n";
+            return 0;
+        }
     }
 }

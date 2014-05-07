@@ -16,7 +16,7 @@ public:
     Commands(); //constructor
     virtual ~Commands(); //de-constructor
     void mkfs();
-    void open(std::string filename, std::string fg);
+    int open(std::string filename, std::string fg);
     void read(int fd, int size);
     void write(int fd, std::string str);
     void seek(int fd, int offset);
@@ -40,6 +40,8 @@ private:
     int SearchForDirectoryName(char desiredir[20]);
     int SearchForDirectoryID(int ID);
     int ReadSrcFile();
+    int ExportSrcFile(std::string dest);
+    int SrcToDest(std::string dest);
 };
 
 #endif	/* COMMANDS_H */

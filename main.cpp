@@ -59,17 +59,12 @@ void callCommand(Commands coms, string command)
 	} else if (tokens[0]=="read"){
 		if (tokens.size() != 3)	cout << "Usage error.  read <fd> <size>" << endl;
 		else coms.read(atoi(tokens[1].c_str()), atoi(tokens[2].c_str()));
-	} else if (tokens[0]=="write"){ //special case
-		stringstream ss1(command);
-		vector<string> tokens1;
-		while(getline(ss1, buf, '"'))	tokens1.push_back(buf);
-		//cout << tokens1[0] << " " << tokens1[1] << endl;
-		stringstream ss2(tokens1[0]);
-		vector<string> tokens2;
-		while(ss2 >> buf)	tokens2.push_back(buf);
-		tokens2.push_back(tokens1[1]);
-		if (tokens2.size() != 3)	cout << "Usage error.  write <fd> <string>" << endl;
-		else coms.write(atoi(tokens[1].c_str()), tokens[2]);
+	}else if (tokens[0]=="write"){ //special case
+                stringstream ss1(command);
+                vector<string> tokens1;
+                while(getline(ss1, buf, '"'))	tokens1.push_back(buf);
+                if (tokens1.size() != 2)	cout << "Usage error.  write <fd> <string>" << endl;
+                else coms.write(atoi(tokens[1].c_str()), tokens1[1]);
 	} else if (tokens[0]=="seek"){
 		if (tokens.size() != 3)	cout << "Usage error.  seek <fd> <offset>" << endl;
 		else coms.seek(atoi(tokens[1].c_str()), atoi(tokens[2].c_str()));
