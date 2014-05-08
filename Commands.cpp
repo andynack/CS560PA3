@@ -9,9 +9,6 @@
 #include <iostream>
 #include <cstring>
 #include <fstream>
-/*#include <sstream>
-#include <string>
-#include <vector>*/
 #include "index.h"
 #include "Commands.h"
 
@@ -1048,6 +1045,7 @@ void Commands::mkdir(std::string dirname){
                         tmp.dir = 1;
                         fp.seekp(-sizeof(tmp),std::ios::cur);
                         fp.write((char*)&tmp, sizeof(tmp));
+                        CurrentDirSize += sizeof(tmp);
                         std::cout<<"Directory "<< tmp.dfname << " added to "<< CurrentDir << "\n\n";
                         success = true; 
                         break;
@@ -1058,26 +1056,24 @@ void Commands::mkdir(std::string dirname){
                     std::cout<< "****Error Directory is Full****\n";
                     error = true;
                 }else{
-                    int temp2 = fp.tellg();
-                    CurrentDirSize += (temp2 - temp);
-                }
-                //update directory size data in inode
-                fp.seekg(0);
-                success = false;
-                while(fp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (fp.tellg() < FileSpacePTR))
-                {
-                    if(ctrlnodes.id == CurrentDirID){
-                        indexnode tmp2 = ctrlnodes;
-                        fp.seekp(-sizeof(tmp2),std::ios::cur);
-                        tmp2.size = CurrentDirSize;
-                        fp.write((char*)&tmp2, sizeof(tmp2));
-                        success = true; 
-                        break;
+                    //update directory size data in inode
+                    fp.seekg(0);
+                    success = false;
+                    while(fp.read((char*)&ctrlnodes, sizeof(ctrlnodes)) && (fp.tellg() < FileSpacePTR))
+                    {
+                        if(ctrlnodes.id == CurrentDirID){
+                            indexnode tmp2 = ctrlnodes;
+                            fp.seekp(-sizeof(tmp2),std::ios::cur);
+                            tmp2.size = CurrentDirSize;
+                            fp.write((char*)&tmp2, sizeof(tmp2));
+                            success = true; 
+                            break;
+                        }
                     }
-                }
-                if (!success){
-                    std::cout<< "****Error: Directory size data could not be updated****\n";
-                    error = true;
+                    if (!success){
+                        std::cout<< "****Error: Directory size data could not be updated****\n";
+                        error = true;
+                    }
                 }
             }
         }
@@ -1480,20 +1476,6 @@ void Commands::link(std::string src, std::string dest){
     directory templatdr;
     indexnode ctrlnodes;
     
-    //find src
- /*   std::string buf;
-    int i = 0;
-    std::stringstream ss(src);
-    std::vector<std::string> tokens;
-    while(std::getline(ss, buf, '/')){
-	tokens.push_back(buf);
-    }
-    SrcFileID=0;
-    while(i<= tokens.size()){
-        std::cout<<"Tokens: "<< tokens[i]<<"\n";
-        SearchForSrcName(tokens[i]);
-        i++;
-    }*/
     SearchForSrcName(src);
     
     std::cout <<"Source ID: " <<SrcFileID<<"\n";
@@ -3989,7 +3971,7 @@ void Commands::import(std::string src, std::string dest){
     
     //write external file to 
     write(DestFileID, buffer);
-    
+    close(DestFileID);
 }
 
 void Commands::fexport(std::string src, std::string dest){
