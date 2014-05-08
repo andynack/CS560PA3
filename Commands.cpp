@@ -5546,6 +5546,7 @@ int Commands::SrcToDest(std::string dest){
                     SrcFileOffset++;
                 }
             }
+            close(DestFileID);
             return 1;
         }else {
             std::cout<<"****Error File I/O Issue****\n\n";
