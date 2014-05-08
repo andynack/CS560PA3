@@ -1,3 +1,5 @@
 CS560PA3
 ========
 
+main.cpp:
+The file can be ran with no parameters (where it will continually take input from standard in) or one parameter (where it will take a list of commands and iterate through them).  First it creates a new instance of commands.  With no parameters, it begins a loop that waits for a command from the user.  Or with one it begins a loop getting each line/command from the file.  Once a line is received, main calls the function that parses all commands.  It iterates through the command and splits it by spaces, getting the command parameters.  The function then checks the first token against the list of available commands.  It then verifies there are the appropriate number of parameters for the command.  It then calls the function written in commands.cpp to execute the command.  This was a useful way to develop this since most commands are written the same way and they can all be parsed the same way.  The only special case is 'write' which must separate the line by quotations then by spaces. Program halts either when user enters input q (for quit) or finishes parsing the input text.

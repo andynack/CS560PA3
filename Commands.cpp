@@ -19,7 +19,6 @@ Commands::Commands() {
     DataBlockSize = 1024; //Defining size of datablocks
     strcpy(CurrentDir, "Root"); //intializing root as current directory
     CurrentDirPTR = FileSpacePTR; //intializing root as current directory
-//    CurrentDirOffset = 0;
     CurrentDirID = 0;
     PrevDirPtr = 0;
     PrevDir[PrevDirPtr]= 0;
@@ -32,6 +31,15 @@ Commands::~Commands() {
 }
 
 void Commands::mkfs() {
+    FileSpacePTR = 64000; //Defining start location of datablock
+    DiskSize = 100000000; //Defining size of filesystem disk
+    DataBlockSize = 1024; //Defining size of datablocks
+    strcpy(CurrentDir, "Root"); //intializing root as current directory
+    CurrentDirPTR = FileSpacePTR; //intializing root as current directory
+    CurrentDirID = 0;
+    PrevDirPtr = 0;
+    PrevDir[PrevDirPtr]= 0;
+    CurrentFileStatus = false;
 
     indexnode ctrlnodes;
     directory templatedir;
@@ -1428,7 +1436,7 @@ void Commands::cd(std::string dirname){
     char desiredirname[20];
     strcpy(desiredirname, dirname.c_str());
     
-    //search for special character
+    //search for special character, if found move up a directory
     if(strcmp(desiredirname, "~")== 0){
         if (PrevDir[PrevDirPtr - 1]== 0){
             strcpy(CurrentDir, "Root"); //set root as current directory
